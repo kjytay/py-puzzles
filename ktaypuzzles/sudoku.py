@@ -49,9 +49,8 @@ class Sudoku:
             # TODO: replace with random board generator
             self.board = [[EMPTY] * self.size for _ in range(self.size)]
             self.blank_count = self.size * self.size
-        
+
         self.is_solved = True if self.blank_count == 0 else False
-        self.solution = self.board if self.is_solved else None
 
     def validate(self) -> bool:
         """
@@ -84,7 +83,6 @@ class Sudoku:
                     box_numbers[box][cell - 1] = True
         return True
 
-
     def get_board_ascii(self) -> str:
         table = ''
         cell_length = len(str(self.size))
@@ -107,7 +105,22 @@ class Sudoku:
 ---------------------------
 {}
         '''.format(self.size, self.size, self.width, self.height, self.get_board_ascii())
+
+
+class SudokuSolver:
+    def __init__(self, sudoku: Sudoku):
+        self.width = sudoku.width
+        self.height = sudoku.height
+        self.size = sudoku.size
+        self.sudoku = sudoku
     
+    # TODO
+    def ip_solve(self) -> Optional[Sudoku]:
+        """
+        Solve the sudoku puzzle as an IP.
+        """
+        return None
+
 
 if __name__ == '__main__':
     test_sudoku = Sudoku(
@@ -123,3 +136,7 @@ if __name__ == '__main__':
         [0,0,0,0,7,0,9,0,0]
     ])
     print(test_sudoku)
+
+    test_sudoku_solver = SudokuSolver(test_sudoku)
+    test_solution = test_sudoku_solver.ip_solve()
+    print(test_solution)
