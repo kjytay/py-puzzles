@@ -400,3 +400,6 @@ FodyWeavers.xsd
 build/
 dist/
 py_puzzles.egg-info/
+
+puzzles-env/
+.vscode/
