@@ -34,6 +34,8 @@ class Sudoku:
         assert self.size > 1, 'Board size cannot be 1 x 1'
 
         if board:
+            assert len(board) == self.size, '# rows in board ({}) should be {}'.format(len(board), self.size)
+            assert len(board[0]) == self.size, '# cols in board ({}) should be {}'.format(len(board[0]), self.size)
             self.blank_count = 0
             self.board: Board = [
                 [cell for cell in row] for row in board]
@@ -59,7 +61,6 @@ class Sudoku:
         self.solution = self.board if self.is_solved else None
 
     def validate(self) -> bool:
-        # TODO: To check this
         """
         Check if the board is valid, i.e. no number is repeated in a row/column/box.
         (Note that this does not automatically mean that a solution exists.
@@ -74,7 +75,7 @@ class Sudoku:
         for row in range(self.size):
             for col in range(self.size):
                 cell = self.board[row][col]
-                box = (row // self.minicols) * self.minicols + (col // self.minirows)
+                box = (row // self.minirows) * self.minirows + (col // self.minicols)
                 if cell == EMPTY:
                     continue
                 elif isinstance(cell, int):
@@ -106,7 +107,6 @@ class Sudoku:
     
     @staticmethod
     def get_board_ascii(minirows: int = 3, minicols: Optional[int] = None, board: Board = None) -> str:
-        # TODO To check this
         minicols = minicols if minicols else minirows
         size = minirows * minicols
         table = ''
@@ -115,12 +115,12 @@ class Sudoku:
         for i, row in enumerate(board):
             if i == 0:
                 table += ('+-' + '-' * (cell_length + 1) *
-                          minirows) * minicols + '+' + '\n'
-            table += (('| ' + '{} ' * minirows) * minicols + '|').format(*[format_int.format(
+                          minicols) * minirows + '+' + '\n'
+            table += (('| ' + '{} ' * minicols) * minirows + '|').format(*[format_int.format(
                 x) if x != EMPTY else ' ' * cell_length for x in row]) + '\n'
-            if i == size - 1 or i % minicols == minicols - 1:
+            if i == size - 1 or i % minirows == minirows - 1:
                 table += ('+-' + '-' * (cell_length + 1) *
-                          minirows) * minicols + '+' + '\n'
+                          minicols) * minirows + '+' + '\n'
         return table
     
     def __str__(self) -> str:
