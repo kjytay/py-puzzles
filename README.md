@@ -9,7 +9,7 @@ Here is a list of repos that I have drawn from:
 
 ## Sudoku
 
-Initialize by passing in a board with the `board` parameter. `minirows` (`minicols`) refers to the number of rows (`cols`). Only `minirows` and `board` are required.
+Initialize by passing in a board with the `board` parameter. `minirows` (`minicols`) refers to the number of rows (`cols`). `minirows` defaults to 3, `minicols` defaults to `minirows`, and `board` defaults to the empty board.
 
 ```
 from ktaypuzzles.sudoku import Sudoku
