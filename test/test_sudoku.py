@@ -1,5 +1,5 @@
 import pytest
-from ktaypuzzles.sudoku import Board, Sudoku
+from ktaypuzzles.sudoku import Board, Sudoku, _SudokuSolver
 
 # Reused constants
 INVALID_BOARD_1 = [
@@ -54,3 +54,10 @@ def test_ip_solve_invalid():
     sudoku = Sudoku(board=INVALID_BOARD_1)
     actual_solution = sudoku.solve()
     assert actual_solution is None
+
+def test_get_candidates_for_cell():
+    sudoku = Sudoku(board=VALID_BOARD_1)
+    sudoku_solver = _SudokuSolver(sudoku)
+    actual_candidates = _SudokuSolver._get_candidates_for_cell(2, 8, board=VALID_BOARD_1)
+    expected_candidates = {2, 4, 6, 7}
+    assert actual_candidates == expected_candidates

@@ -1,5 +1,5 @@
 import cvxpy as cp
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Union, Set
 
 """
 Each Sudoku board is represented by a `Board` object, where board[r][c] is either a number
@@ -59,6 +59,7 @@ class Sudoku:
         self.solution = self.board if self.is_solved else None
 
     def validate(self) -> bool:
+        # TODO: To check this
         """
         Check if the board is valid, i.e. no number is repeated in a row/column/box.
         (Note that this does not automatically mean that a solution exists.
@@ -99,8 +100,13 @@ class Sudoku:
         self.solution = solution_board
         return solution_board
     
+    @ staticmethod
+    def _copy_board(board: Board) -> Board:
+        return [[cell for cell in row] for row in board]
+    
     @staticmethod
-    def get_board_ascii(minirows: int, minicols: Optional[int], board: Board) -> str:
+    def get_board_ascii(minirows: int = 3, minicols: Optional[int] = None, board: Board = None) -> str:
+        # TODO To check this
         minicols = minicols if minicols else minirows
         size = minirows * minicols
         table = ''
@@ -144,7 +150,7 @@ class _SudokuSolver:
         self.minicols = sudoku.minicols
         self.size = sudoku.size
         self.is_valid_board = sudoku.is_valid_board
-        self.sudoku = sudoku
+        self.original_board = sudoku.board
     
     def ip_solve(self) -> Optional[Board]:
         """
@@ -188,8 +194,8 @@ class _SudokuSolver:
         # original board constraints
         for r in range(self.size):
             for c in range(self.size):
-                if self.sudoku.board[r][c] in range(1, self.size + 1):
-                    constraints.append(x[self.sudoku.board[r][c] - 1][r][c] == 1)
+                if self.original_board[r][c] in range(1, self.size + 1):
+                    constraints.append(x[self.original_board[r][c] - 1][r][c] == 1)
 
         prob = cp.Problem(cp.Minimize(cp.sum(x[0])), constraints)
         prob.solve()
@@ -203,6 +209,35 @@ class _SudokuSolver:
                 for r in range(self.size)
             ]
             return solution_board
+    
+    def backtracking_solve(self) -> Optional[Board]:
+        """
+        Solve the sudoku puzzle with backtracking.
+        """
+        # TODO
+        pass
+
+    @staticmethod
+    def _get_candidates_for_cell(r: int, c: int, minirows: int = 3, minicols: Optional[int] = None,
+                                 board: Board = None) -> Set[int]:
+        """
+        Return possible values in (r,c) given the current board. It ignores the value (if present)
+        at (r,c).
+        """
+        minicols = minicols if minicols else minirows
+        size = minirows * minicols
+        candidates = set(range(1, size + 1))
+        current_row_values = set([board[r][col] for col in range(size) if col != c]) - {EMPTY}
+        candidates = candidates - current_row_values
+        current_col_values = set([board[row][c] for row in range(size) if row != r]) - {EMPTY}
+        candidates = candidates - current_col_values
+        box_corner_row = (r // minirows) * minirows
+        box_corner_col = (c // minicols) * minicols
+        current_box_values = set([board[box_corner_row+row][box_corner_col+col] \
+                                  for row in range(minirows) for col in range(minicols) \
+                                    if row != r and col != c]) - {EMPTY}
+        candidates = candidates - current_box_values
+        return candidates
 
 
 if __name__ == '__main__':
