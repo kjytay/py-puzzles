@@ -224,8 +224,52 @@ class _SudokuSolver:
         board admits multiple solutions, all solutions are returned. If there is no solution,
         empty list is returned.
         """
-        # TODO
+        empty_cells = Sudoku._get_empty_cells(self.original_board)
+        candidates_dict = {}
+        for (r,c) in empty_cells:
+            candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
+                r, c, self.minirows, self.minicols, self.original_board)
         
+        solution_list = []
+        current_board = Sudoku._copy_board(self.original_board)
+        self._do_backtracking(current_board, candidates_dict, solution_list)
+
+        return solution_list
+    
+    def _do_backtracking(self, current_board, candidates_dict, solution_list) -> None:
+        if len(candidates_dict) == 0:
+            # recursion base case 1: no more empty cells
+            solution_list.append(Sudoku._copy_board(current_board))
+            return
+        elif 0 in [len(v) for v in candidates_dict.values()]:
+            # recursion base case 2: at least one remaiing empty cell has no candidates
+            return
+        else:
+            # recursive case
+            # pick an empty cell and fill it (choose a cell with fewest candidates)
+            # update the candidates dictionary
+            candidates_list = sorted(candidates_dict.items(), key=lambda item: len(item[1]))
+            current_cell = candidates_list[0][0]
+            (current_row, current_col) = current_cell
+            current_candidates = candidates_list[0][1]
+            for candidate in current_candidates:
+                # explore
+                original_candidates_dict = {current_cell: current_candidates}
+                current_board[current_row][current_col] = candidate
+                current_neighbors = _SudokuSolver._get_neighbors_for_cell(
+                    current_row, current_col, self.minirows, self.minicols)
+                current_neighbors = current_neighbors & set(candidates_dict.keys())
+                for (r,c) in current_neighbors:
+                    original_candidates_dict[(r,c)] = candidates_dict[(r,c)]
+                    candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
+                        r, c, self.minirows, self.minicols, current_board)
+                del candidates_dict[current_cell]
+                self._do_backtracking(current_board, candidates_dict, solution_list)
+
+                # undo recursion
+                current_board[current_row][current_col] = EMPTY
+                for cell in original_candidates_dict:
+                    candidates_dict[cell] = original_candidates_dict[cell]
 
     @staticmethod
     def _get_candidates_for_cell(r: int, c: int, minirows: int = 3, minicols: Optional[int] = None,
@@ -261,7 +305,6 @@ class _SudokuSolver:
         col_neighbors = set([(r, col) for col in range(size) if col != c])
         box_corner_row = (r // minirows) * minirows
         box_corner_col = (c // minicols) * minicols
-        print(box_corner_row, box_corner_col)
         box_neighbors = set([(box_corner_row+row, box_corner_col+col) \
                                   for row in range(minirows) for col in range(minicols) \
                                     if box_corner_row+row != r or box_corner_col+col != c])

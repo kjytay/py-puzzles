@@ -98,14 +98,48 @@ def test_backtracking_solve():
     sudoku = Sudoku(minirows=2, minicols=3, board=VALID_BOARD_2)
     sudoku_solver = _SudokuSolver(sudoku)
     actual_solution = sudoku_solver.backtracking_solve()
-    expected_solution: Board = [
+    expected_solution = [[
         [3,4,1,5,2,6],
         [5,2,6,4,1,3],
         [4,6,3,2,5,1],
         [1,5,2,6,3,4],
         [2,3,4,1,6,5],
         [6,1,5,3,4,2]
+    ]]
+    assert actual_solution == expected_solution
+
+def test_backtracking_solve2():
+    # Test backtracking solver with 2x2 minigrid board that has multiple solutions
+    sudoku = Sudoku(minirows=2, minicols=2, board = [
+        [1,2,3,0],
+        [3,4,1,0],
+        [2,0,0,0],
+        [0,0,0,0]
+    ])
+    sudoku_solver = _SudokuSolver(sudoku)
+    actual_solution = sudoku_solver.backtracking_solve()
+    expected_solution = [
+        [
+            [1, 2, 3, 4],
+            [3, 4, 1, 2],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1]
+        ], [
+            [1, 2, 3, 4],
+            [3, 4, 1, 2],
+            [2, 3, 4, 1],
+            [4, 1, 2, 3]
+        ]
     ]
+    assert actual_solution == expected_solution
+
+def test_backtracking_solve_invalid():
+    # Test IP solver with an invalid board
+    sudoku = Sudoku(board=INVALID_BOARD_1)
+    sudoku_solver = _SudokuSolver(sudoku)
+    actual_solution = sudoku_solver.backtracking_solve()
+    assert actual_solution == []
+
 
 def test_get_candidates_for_cell():
     sudoku = Sudoku(board=VALID_BOARD_1)
