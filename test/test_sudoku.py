@@ -56,7 +56,8 @@ def test_get_empty_cells():
 def test_ip_solve():
     # Test IP solver with a valid board
     sudoku = Sudoku(board=VALID_BOARD_1)
-    actual_solution = sudoku.solve()
+    sudoku_solver = _SudokuSolver(sudoku)
+    actual_solution = sudoku_solver.ip_solve()
     expected_solution: Board = [
         [9, 8, 1, 7, 4, 3, 5, 2, 6],
         [3, 7, 5, 2, 9, 6, 4, 8, 1],
@@ -73,7 +74,8 @@ def test_ip_solve():
 def test_ip_solve2():
     # Test IP solver with a 2x3 minigrid board
     sudoku = Sudoku(minirows=2, minicols=3, board=VALID_BOARD_2)
-    actual_solution = sudoku.solve()
+    sudoku_solver = _SudokuSolver(sudoku)
+    actual_solution = sudoku_solver.ip_solve()
     expected_solution: Board = [
         [3,4,1,5,2,6],
         [5,2,6,4,1,3],
@@ -87,7 +89,8 @@ def test_ip_solve2():
 def test_ip_solve_invalid():
     # Test IP solver with an invalid board
     sudoku = Sudoku(board=INVALID_BOARD_1)
-    actual_solution = sudoku.solve()
+    sudoku_solver = _SudokuSolver(sudoku)
+    actual_solution = sudoku_solver.ip_solve()
     assert actual_solution is None
 
 def test_get_candidates_for_cell():
