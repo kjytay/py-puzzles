@@ -1,5 +1,5 @@
 import cvxpy as cp
-from typing import Iterable, List, Optional, Union, Set
+from typing import Iterable, List, Optional, Union, Set, Tuple
 
 """
 Each Sudoku board is represented by a `Board` object, where board[r][c] is either a number
@@ -101,9 +101,17 @@ class Sudoku:
         self.solution = solution_board
         return solution_board
     
-    @ staticmethod
+    @staticmethod
     def _copy_board(board: Board) -> Board:
         return [[cell for cell in row] for row in board]
+    
+    @staticmethod
+    def _get_empty_cells(board: Board) -> Set[Tuple[int, int]]:
+        """
+        Empty cells returned as a set of (r,c) indices.
+        """
+        size = len(board)
+        return set([(r,c) for r in range(size) for c in range(size) if board[r][c] is EMPTY])
     
     @staticmethod
     def get_board_ascii(minirows: int = 3, minicols: Optional[int] = None, board: Board = None) -> str:

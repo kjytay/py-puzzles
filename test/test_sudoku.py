@@ -1,5 +1,5 @@
 import pytest
-from ktaypuzzles.sudoku import Board, Sudoku, _SudokuSolver
+from ktaypuzzles.sudoku import Board, EMPTY, Sudoku, _SudokuSolver
 
 # Reused constants
 INVALID_BOARD_1 = [
@@ -40,6 +40,18 @@ def test_invalid_board():
     # Invalid board
     sudoku = Sudoku(board=INVALID_BOARD_1)
     assert sudoku.is_valid_board is False
+
+def test_get_empty_cells():
+    actual_empty_cells = Sudoku._get_empty_cells([
+        [3,4,EMPTY,EMPTY,2,6],
+        [5,2,6,4,1,3],
+        [4,6,3,2,5,1],
+        [1,5,2,EMPTY,EMPTY,4],
+        [EMPTY,3,4,1,6,5],
+        [6,1,5,3,4,2]
+    ])
+    expected_empty_cells = {(0,2), (0,3), (3,3), (3,4), (4,0)}
+    assert actual_empty_cells == expected_empty_cells
 
 def test_ip_solve():
     # Test IP solver with a valid board
