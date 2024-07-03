@@ -218,12 +218,14 @@ class _SudokuSolver:
             ]
             return solution_board
     
-    def backtracking_solve(self) -> Optional[Board]:
+    def backtracking_solve(self) -> List[Board]:
         """
-        Solve the sudoku puzzle with backtracking.
+        Solve the sudoku puzzle with backtracking. Solutions are returned as a list: if the
+        board admits multiple solutions, all solutions are returned. If there is no solution,
+        empty list is returned.
         """
         # TODO
-        pass
+        
 
     @staticmethod
     def _get_candidates_for_cell(r: int, c: int, minirows: int = 3, minicols: Optional[int] = None,
@@ -243,9 +245,27 @@ class _SudokuSolver:
         box_corner_col = (c // minicols) * minicols
         current_box_values = set([board[box_corner_row+row][box_corner_col+col] \
                                   for row in range(minirows) for col in range(minicols) \
-                                    if row != r and col != c]) - {EMPTY}
+                                    if box_corner_row+row != r or box_corner_col+col != c]) - {EMPTY}
         candidates = candidates - current_box_values
         return candidates
+    
+    @staticmethod
+    def _get_neighbors_for_cell(r: int, c: int, minirows: int = 3, minicols: Optional[int] = None) \
+        -> Set[Tuple[int, int]]:
+        """
+        Return cells which are in the same row, column or box as (r,c).
+        """
+        minicols = minicols if minicols else minirows
+        size = minirows * minicols
+        row_neighbors = set([(row, c) for row in range(size) if row != r])
+        col_neighbors = set([(r, col) for col in range(size) if col != c])
+        box_corner_row = (r // minirows) * minirows
+        box_corner_col = (c // minicols) * minicols
+        print(box_corner_row, box_corner_col)
+        box_neighbors = set([(box_corner_row+row, box_corner_col+col) \
+                                  for row in range(minirows) for col in range(minicols) \
+                                    if box_corner_row+row != r or box_corner_col+col != c])
+        return row_neighbors | col_neighbors | box_neighbors
 
 
 if __name__ == '__main__':

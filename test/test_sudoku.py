@@ -93,9 +93,32 @@ def test_ip_solve_invalid():
     actual_solution = sudoku_solver.ip_solve()
     assert actual_solution is None
 
+def test_backtracking_solve():
+    # Test backtracking solver with 2x3 minigrid board
+    sudoku = Sudoku(minirows=2, minicols=3, board=VALID_BOARD_2)
+    sudoku_solver = _SudokuSolver(sudoku)
+    actual_solution = sudoku_solver.backtracking_solve()
+    expected_solution: Board = [
+        [3,4,1,5,2,6],
+        [5,2,6,4,1,3],
+        [4,6,3,2,5,1],
+        [1,5,2,6,3,4],
+        [2,3,4,1,6,5],
+        [6,1,5,3,4,2]
+    ]
+
 def test_get_candidates_for_cell():
     sudoku = Sudoku(board=VALID_BOARD_1)
     sudoku_solver = _SudokuSolver(sudoku)
     actual_candidates = _SudokuSolver._get_candidates_for_cell(2, 8, board=VALID_BOARD_1)
     expected_candidates = {2, 4, 6, 7}
     assert actual_candidates == expected_candidates
+
+def test_get_neighbors_for_cell():
+    actual_neighbors = _SudokuSolver._get_neighbors_for_cell(2, 4, minirows=2, minicols=3)
+    expected_neighbors = {
+        (2,0), (2,1), (2,2), (2,3), (2,5),
+        (0,4), (1,4), (3,4), (4,4), (5,4),
+        (3,3), (3,5)
+    }
+    assert actual_neighbors == expected_neighbors
