@@ -13,7 +13,8 @@ EMPTY = None
 class Sudoku:
 
     def __init__(self, minirows: int = 3, minicols: Optional[int] = None,
-                 board: Optional[Iterable[Iterable[Union[int, None]]]] = None):
+                 board: Optional[Iterable[Iterable[Union[int, None]]]] = None,
+                 blank_proportion: float = 0.5):
         """
         Initializes a Sudoku board
 
@@ -21,7 +22,7 @@ class Sudoku:
         :param minicols: Optional integer representing the columns of the small Sudoku grid.
         If not provided, defaults to the value of `minirows`.
         :param board: Optional iterable for a the initial state of the Sudoku board.
-        If not provided, defaults to empty board.
+        If not provided, generates a random board with ~`blank_proportion` cells empty.
 
         :raises AssertionError: If the minirows, minicols, or size of the board is invalid.
         :raises Exception: If given board is invalid.
@@ -52,10 +53,10 @@ class Sudoku:
             else:
                 self.is_valid_board = True
         else:
-            # if board was not passed in, generate empty board
-            # TODO: replace with random board generator
-            self.board = [[EMPTY] * self.size for _ in range(self.size)]
-            self.blank_count = self.size * self.size
+            # if board was not passed in, generate a random board
+            assert blank_proportion > 0 and blank_proportion < 1, 'blank_proportion must be in (0,1)'
+            self.board = Sudoku.generate_puzzle_board(self.minirows, self.minicols, blank_proportion)
+            self.blank_count = len(self._get_empty_cells(self.board))
             self.is_valid_board = True
 
         self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
@@ -113,6 +114,37 @@ class Sudoku:
         """
         size = len(board)
         return set([(r,c) for r in range(size) for c in range(size) if board[r][c] is EMPTY])
+    
+    @staticmethod
+    def generate_puzzle_board(minirows: int = 3, minicols: Optional[int] = None,
+                        blank_proportion: float = 0.5) -> Board:
+        """
+        Generate a random sudoku puzzle. We do so in the following way:
+        1. Generate a complete board with _generate_complete_board().
+        2. Randomly remove `blank_proportion` of the cells.
+        3. Use backtracking_solve() to check if the solution is unique. If not, keeping adding
+           cells back until the solution is unique.
+        """
+        minicols = minicols if minicols else minirows
+        size = minirows * minicols
+        complete_board = Sudoku._generate_complete_board(minirows, minicols)
+
+        num_cells_to_remove = round(size * size * blank_proportion)
+        puzzle_board = Sudoku._copy_board(complete_board)
+        cells_to_remove = random.sample([(r,c) for r in range(size) for c in range(size)],
+                                        num_cells_to_remove)
+        for (r,c) in cells_to_remove:
+            puzzle_board[r][c] = EMPTY
+
+        # get solutions for this board, then keeping adding cells until solution is unique
+        sudoku_solver = _SudokuSolver(Sudoku(minirows, minicols, puzzle_board))
+        solution_list = sudoku_solver.backtracking_solve()
+        while len(solution_list) > 1:
+            r,c = cells_to_remove.pop()
+            puzzle_board[r][c] = complete_board[r][c]
+            solution_list = [board for board in solution_list if board[r][c] == complete_board[r][c]]
+
+        return puzzle_board
     
     @staticmethod
     def _generate_complete_board(minirows: int = 3, minicols: Optional[int] = None) -> Board:

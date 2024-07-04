@@ -1,4 +1,5 @@
 import pytest
+import random
 from ktaypuzzles.sudoku import Board, EMPTY, Sudoku, _SudokuSolver
 
 # Reused constants
@@ -52,6 +53,15 @@ def test_get_empty_cells():
     ])
     expected_empty_cells = {(0,2), (0,3), (3,3), (3,4), (4,0)}
     assert actual_empty_cells == expected_empty_cells
+
+def test_generate_puzzle_board():
+    # We check generate_puzzle_board() by generating a random puzzle, then
+    # using backtracking to make sure solution is unique.
+    random.seed(1)
+    puzzle_board = Sudoku.generate_puzzle_board(3, 3, 0.6)
+    sudoku_solver = _SudokuSolver(Sudoku(3, 3, puzzle_board))
+    solution_list = sudoku_solver.backtracking_solve()
+    assert len(solution_list) == 1
 
 def test_ip_solve():
     # Test IP solver with a valid board
