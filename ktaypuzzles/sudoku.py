@@ -1,5 +1,6 @@
 import cvxpy as cp
-from typing import Iterable, List, Optional, Union, Set, Tuple
+import random
+from typing import Dict, Iterable, List, Optional, Union, Set, Tuple
 
 """
 Each Sudoku board is represented by a `Board` object, where board[r][c] is either a number
@@ -112,6 +113,69 @@ class Sudoku:
         """
         size = len(board)
         return set([(r,c) for r in range(size) for c in range(size) if board[r][c] is EMPTY])
+    
+    @staticmethod
+    def _generate_complete_board(minirows: int = 3, minicols: Optional[int] = None) -> Board:
+        """
+        Generate a random complete sudoku board.
+        We do so by randomly generating the first row, then filling everything else in
+        one-by-one, with backtracking to ensure validity.
+        """
+        minicols = minicols if minicols else minirows
+        size = minirows * minicols
+        board = [[EMPTY] * size for _ in range(size)]
+        board[0] = list(range(1, size+1))
+        random.shuffle(board[0])
+
+        empty_cells = Sudoku._get_empty_cells(board)
+        candidates_dict = {}
+        for (r,c) in empty_cells:
+            candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
+                r, c, minirows, minicols, board)
+            
+        solution_list = []
+        Sudoku._complete_board_recursion(board, candidates_dict, solution_list, minirows, minicols)
+
+        return solution_list[0]
+
+    @staticmethod
+    def _complete_board_recursion(board: Board, candidates_dict: Dict[Tuple[int, int], Set[int]],
+                                  solution_list: List[Board], minirows: int, minicols: int) -> Board:
+        if len(candidates_dict) == 0:
+            # recursion base case 1: no more empty cells
+            solution_list.append(Sudoku._copy_board(board))
+            return True
+        elif 0 in [len(v) for v in candidates_dict.values()]:
+            # recursion base case 2: at least one remaiing empty cell has no candidates
+            return False
+        else:
+            # recursive case
+            # pick an empty cell and fill it (choose a cell with fewest candidates)
+            # update the candidates dictionary
+            candidates_list = sorted(candidates_dict.items(), key=lambda item: len(item[1]))
+            current_cell = candidates_list[0][0]
+            (current_row, current_col) = current_cell
+            current_candidates = candidates_list[0][1]
+            for candidate in current_candidates:
+                # explore
+                original_candidates_dict = {current_cell: current_candidates}
+                board[current_row][current_col] = candidate
+                current_neighbors = _SudokuSolver._get_neighbors_for_cell(
+                    current_row, current_col, minirows, minicols)
+                current_neighbors = current_neighbors & set(candidates_dict.keys())
+                for (r,c) in current_neighbors:
+                    original_candidates_dict[(r,c)] = candidates_dict[(r,c)]
+                    candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
+                        r, c, minirows, minicols, board)
+                del candidates_dict[current_cell]
+                if Sudoku._complete_board_recursion(board, candidates_dict, solution_list, minirows, minicols):
+                    return True
+
+                # undo recursion
+                board[current_row][current_col] = EMPTY
+                for cell in original_candidates_dict:
+                    candidates_dict[cell] = original_candidates_dict[cell]
+            return False
     
     @staticmethod
     def get_board_ascii(minirows: int = 3, minicols: Optional[int] = None, board: Board = None) -> str:
@@ -236,7 +300,8 @@ class _SudokuSolver:
 
         return solution_list
     
-    def _do_backtracking(self, current_board, candidates_dict, solution_list) -> None:
+    def _do_backtracking(self, current_board: Board, candidates_dict: Dict[Tuple[int, int], Set[int]],
+                         solution_list: List[Board]) -> None:
         if len(candidates_dict) == 0:
             # recursion base case 1: no more empty cells
             solution_list.append(Sudoku._copy_board(current_board))
