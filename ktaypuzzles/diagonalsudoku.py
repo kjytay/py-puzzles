@@ -10,7 +10,6 @@ Sudoku puzzle with diagonal constraints: numbers must be unique on each main dia
 """
 class DiagonalSudoku(Sudoku):
 
-    @override
     def __init__(self, minirows: int = 3,
                  board: Optional[Iterable[Iterable[Union[int, None]]]] = None):
         """
@@ -103,18 +102,18 @@ class DiagonalSudoku(Sudoku):
 
         return True
 
-    #TODO
+    @override
     def solve(self) -> Optional[Board]:
         """
         Solve the sudoku board. Board is saved as self.solution, and also returned.
         """
-        sudoku_solver = _SudokuSolver(self)
+        sudoku_solver = _DiagonalSudokuSolver(self)
         solution_board = sudoku_solver.backtracking_solve()
         self.is_solved = len(solution_board) > 0
         self.solution = solution_board[0] if self.is_solved else None
         return solution_board
     
-    #TODO
+    @override
     def generate_puzzle_board(self, blank_proportion: float = 0.5) -> Board:
         """
         Generate a new random sudoku puzzle and save in self.board. We do so in the following way:
@@ -134,7 +133,7 @@ class DiagonalSudoku(Sudoku):
             puzzle_board[r][c] = EMPTY
 
         # get solutions for this board, then keeping adding cells until solution is unique
-        sudoku_solver = _SudokuSolver(Sudoku(self.minirows, self.minicols, puzzle_board))
+        sudoku_solver = _DiagonalSudokuSolver(DiagonalSudoku(self.minirows, puzzle_board))
         solution_list = sudoku_solver.backtracking_solve()
         while len(solution_list) > 1:
             r,c = cells_to_remove.pop()
@@ -146,78 +145,7 @@ class DiagonalSudoku(Sudoku):
         self.blank_count = len(self._get_empty_cells(self.board))
         self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
         self.solution = self.board if self.is_solved else None
-    
-    #TODO
-    def _generate_complete_board(self) -> Board:
-        """
-        Generate a random complete sudoku board.
-        We do so by randomly generating the first row, then filling everything else in
-        one-by-one, with backtracking to ensure validity.
-        """
-        board = [[EMPTY] * self.size for _ in range(self.size)]
-        board[0] = list(range(1, self.size+1))
-        random.shuffle(board[0])
-
-        empty_cells = Sudoku._get_empty_cells(board)
-        candidates_dict = {}
-        for (r,c) in empty_cells:
-            candidates_dict[(r,c)] = self._get_candidates_for_cell(r, c, board)
-            
-        solution_list = []
-        self._complete_board_recursion(board, candidates_dict, solution_list)
-
-        return solution_list[0]
-
-    #TODO
-    def _complete_board_recursion(self, board: Board, candidates_dict: Dict[Tuple[int, int], Set[int]],
-                                  solution_list: List[Board]) -> Board:
-        if len(candidates_dict) == 0:
-            # recursion base case 1: no more empty cells
-            solution_list.append(Sudoku._copy_board(board))
-            return True
-        elif 0 in [len(v) for v in candidates_dict.values()]:
-            # recursion base case 2: at least one remaiing empty cell has no candidates
-            return False
-        else:
-            # recursive case
-            # pick an empty cell and fill it (choose a cell with fewest candidates)
-            # update the candidates dictionary
-            candidates_list = sorted(candidates_dict.items(), key=lambda item: len(item[1]))
-            current_cell = candidates_list[0][0]
-            (current_row, current_col) = current_cell
-            current_candidates = candidates_list[0][1]
-            for candidate in current_candidates:
-                # explore
-                original_candidates_dict = {current_cell: current_candidates}
-                board[current_row][current_col] = candidate
-                current_neighbors = self._get_neighbors_for_cell(current_row, current_col)
-                current_neighbors = current_neighbors & set(candidates_dict.keys())
-                for (r,c) in current_neighbors:
-                    original_candidates_dict[(r,c)] = candidates_dict[(r,c)]
-                    candidates_dict[(r,c)] = self._get_candidates_for_cell(r, c, board)
-                del candidates_dict[current_cell]
-                if self._complete_board_recursion(board, candidates_dict, solution_list):
-                    return True
-
-                # undo recursion
-                board[current_row][current_col] = EMPTY
-                for cell in original_candidates_dict:
-                    candidates_dict[cell] = original_candidates_dict[cell]
-            return False
-    
-    #TODO
-    def _get_candidates_for_cell(self, r: int, c: int, board: Board) -> Set[int]:
-        """
-        Return possible values in (r,c) given the current board. It ignores the value (if present)
-        at (r,c).
-        """
-        candidates = set(range(1, self.size + 1))
-
-        neighbors = self._get_neighbors_for_cell(r, c)
-        neighbor_values = set([board[i][j] for (i,j) in neighbors]) - {EMPTY}
-
-        return candidates - neighbor_values
-    
+     
     @override
     def _get_neighbors_for_cell(self, r: int, c: int) -> Set[Tuple[int, int]]:
         """
@@ -236,7 +164,7 @@ class DiagonalSudoku(Sudoku):
             if r+c == self.size-1 else set()
         return row_neighbors | col_neighbors | box_neighbors | l2r_neighbors | r2l_neighbors
 
-    
+    @override
     def __str__(self) -> str:
         """
         Prints the original board.
@@ -250,141 +178,30 @@ class DiagonalSudoku(Sudoku):
                    Sudoku.get_board_ascii(self.minirows, self.minicols, self.board))
     
 
-# class _SudokuSolver:
-#     def __init__(self, sudoku: Sudoku):
-#         self.minirows = sudoku.minirows
-#         self.minicols = sudoku.minicols
-#         self.size = sudoku.size
-#         self.sudoku = sudoku
-#         self.is_valid_board = sudoku.is_valid_board
-#         self.original_board = sudoku.board
+class _DiagonalSudokuSolver(_SudokuSolver):
+    def __init__(self, sudoku: DiagonalSudoku):
+        super().__init__(sudoku)
     
-#     def ip_solve(self) -> Optional[Board]:
-#         """
-#         Solve the sudoku puzzle as an IP.
-#         Board has numbers in range (1, self.size+1), we solve the IP with numbers in range(self.size).
-#         Ref: https://www.mathworks.com/help/optim/ug/sudoku-puzzles-problem-based.html
-#         """
-#         if not self.is_valid_board:
-#             return None
-
-#         # x[v][r][c]: 1 if value of cell (r,c) is v, 0 otherwise
-#         x = [cp.Variable((self.size, self.size), integer=True) for _ in range(self.size)]
-#         constraints = []
-
-#         # binary constraints
-#         constraints.extend([0 <= xv for xv in x])
-#         constraints.extend([xv <= 1 for xv in x])
-
-#         # only one value for each cell
-#         constraints.extend([cp.sum([xv[r][c] for xv in x]) == 1 \
-#                             for r in range(self.size) for c in range(self.size)])
-        
-#         # each digit appears exactly once in each row
-#         constraints.extend([cp.sum([xv[r][c] for c in range(self.size)]) == 1 \
-#                             for xv in x for r in range(self.size)])
-        
-#         # each digit appears exactly once in each column
-#         constraints.extend([cp.sum([xv[r][c] for r in range(self.size)]) == 1 \
-#                             for xv in x for c in range(self.size)])
-        
-#         # each digit appears exactly once in each mini-grid
-#         for box_row_index in range(self.minicols):
-#             for box_col_index in range(self.minirows):
-#                 row_offset = box_row_index * self.minirows
-#                 col_offset = box_col_index * self.minicols
-#                 constraints.extend([
-#                     cp.sum(xv[row_offset:(row_offset+self.minirows), 
-#                               col_offset:(col_offset+self.minicols)]) == 1 for xv in x
-#                 ])
-
-#         # original board constraints
-#         for r in range(self.size):
-#             for c in range(self.size):
-#                 if self.original_board[r][c] in range(1, self.size + 1):
-#                     constraints.append(x[self.original_board[r][c] - 1][r][c] == 1)
-
-#         prob = cp.Problem(cp.Minimize(cp.sum(x[0])), constraints)
-#         prob.solve()
-
-#         if prob.value == float('inf'):
-#             return None
-#         else:
-#             # convert x to board
-#             solution_board: Board = [
-#                 [[xv.value[r][c] for xv in x].index(1) + 1 for c in range(self.size)] \
-#                 for r in range(self.size)
-#             ]
-#             return solution_board
-    
-#     def backtracking_solve(self) -> List[Board]:
-#         """
-#         Solve the sudoku puzzle with backtracking. Solutions are returned as a list: if the
-#         board admits multiple solutions, all solutions are returned. If there is no solution,
-#         empty list is returned.
-#         """
-#         empty_cells = Sudoku._get_empty_cells(self.original_board)
-#         candidates_dict = {}
-#         for (r,c) in empty_cells:
-#             candidates_dict[(r,c)] = self.sudoku._get_candidates_for_cell(
-#                 r, c, self.original_board)
-        
-#         solution_list = []
-#         current_board = Sudoku._copy_board(self.original_board)
-#         self._do_backtracking(current_board, candidates_dict, solution_list)
-
-#         return solution_list
-    
-#     def _do_backtracking(self, current_board: Board, candidates_dict: Dict[Tuple[int, int], Set[int]],
-#                          solution_list: List[Board]) -> None:
-#         if len(candidates_dict) == 0:
-#             # recursion base case 1: no more empty cells
-#             solution_list.append(Sudoku._copy_board(current_board))
-#             return
-#         elif 0 in [len(v) for v in candidates_dict.values()]:
-#             # recursion base case 2: at least one remaiing empty cell has no candidates
-#             return
-#         else:
-#             # recursive case
-#             # pick an empty cell and fill it (choose a cell with fewest candidates)
-#             # update the candidates dictionary
-#             candidates_list = sorted(candidates_dict.items(), key=lambda item: len(item[1]))
-#             current_cell = candidates_list[0][0]
-#             (current_row, current_col) = current_cell
-#             current_candidates = candidates_list[0][1]
-#             for candidate in current_candidates:
-#                 # explore
-#                 original_candidates_dict = {current_cell: current_candidates}
-#                 current_board[current_row][current_col] = candidate
-#                 current_neighbors = self.sudoku._get_neighbors_for_cell(current_row, current_col)
-#                 current_neighbors = current_neighbors & set(candidates_dict.keys())
-#                 for (r,c) in current_neighbors:
-#                     original_candidates_dict[(r,c)] = candidates_dict[(r,c)]
-#                     candidates_dict[(r,c)] = self.sudoku._get_candidates_for_cell(r, c, current_board)
-#                 del candidates_dict[current_cell]
-#                 self._do_backtracking(current_board, candidates_dict, solution_list)
-
-#                 # undo recursion
-#                 current_board[current_row][current_col] = EMPTY
-#                 for cell in original_candidates_dict:
-#                     candidates_dict[cell] = original_candidates_dict[cell]
+    @override
+    def ip_solve(self) -> Optional[Board]:
+        raise NotImplementedError
 
 
 if __name__ == '__main__':
 
-    # TODO: Update board
     test_sudoku = DiagonalSudoku(
         board = [
-        [0,0,0,0,0,3,5,0,0],
-        [0,7,0,0,0,0,0,8,1],
-        [0,0,0,1,0,8,9,0,0],
-        [4,0,0,9,2,0,3,0,0],
-        [7,0,0,0,0,4,0,0,0],
-        [1,0,0,0,0,0,6,9,0],
-        [6,0,0,4,0,9,0,0,0],
-        [0,0,0,6,0,0,0,0,3],
-        [0,3,0,0,0,0,2,0,0]
-    ])
+            [9,0,0,0,0,0,0,0,0],
+            [0,5,8,0,0,9,4,0,0],
+            [7,0,0,0,5,0,0,0,0],
+            [8,0,3,0,2,0,5,0,0],
+            [1,0,0,0,0,5,8,0,3],
+            [0,0,0,8,7,0,1,2,0],
+            [0,8,9,2,1,0,7,0,0],
+            [6,0,5,0,4,0,9,8,0],
+            [0,1,7,5,0,0,0,0,0]
+        ])
     test_sudoku.show()
-    print(test_sudoku)
+    
+    test_sudoku.solve()
     test_sudoku.show_solution()
