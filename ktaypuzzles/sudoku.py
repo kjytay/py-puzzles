@@ -16,8 +16,7 @@ Basic sudoku puzzle.
 class Sudoku:
 
     def __init__(self, minirows: int = 3, minicols: Optional[int] = None,
-                 board: Optional[Iterable[Iterable[Union[int, None]]]] = None,
-                 blank_proportion: float = 0.5):
+                 board: Optional[Iterable[Iterable[Union[int, None]]]] = None):
         """
         Initializes a Sudoku board
 
@@ -25,7 +24,7 @@ class Sudoku:
         :param minicols: Optional integer representing the columns of the small Sudoku grid.
         If not provided, defaults to the value of `minirows`.
         :param board: Optional iterable for a the initial state of the Sudoku board.
-        If not provided, generates a random board with ~`blank_proportion` cells empty.
+        If not provided, generates an empty board.
 
         :raises AssertionError: If the minirows, minicols, or size of the board is invalid.
         """
@@ -40,7 +39,6 @@ class Sudoku:
         if board:
             assert len(board) == self.size, '# rows in board ({}) should be {}'.format(len(board), self.size)
             assert len(board[0]) == self.size, '# cols in board ({}) should be {}'.format(len(board[0]), self.size)
-            self.blank_count = 0
             self.board: Board = [
                 [cell for cell in row] for row in board]
             # replace anything other than valid integers with an empty cell
@@ -48,19 +46,17 @@ class Sudoku:
                 for j in range(len(row)):
                     if not row[j] in range(1, self.size + 1):
                         row[j] = EMPTY
-                        self.blank_count += 1
             if self.validate() is False:
                 self.is_valid_board = False
                 print('Given board is invalid! No solution exists.')
             else:
                 self.is_valid_board = True
         else:
-            # if board was not passed in, generate a random board
-            assert blank_proportion > 0 and blank_proportion < 1, 'blank_proportion must be in (0,1)'
-            self.board = Sudoku.generate_puzzle_board(self.minirows, self.minicols, blank_proportion)
-            self.blank_count = len(self._get_empty_cells(self.board))
+            # if board was not passed in set board as empty board
+            self.board = Sudoku.get_empty_board(self.minirows, self.minicols)
             self.is_valid_board = True
 
+        self.blank_count = len(self._get_empty_cells(self.board))
         self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
         self.solution = self.board if self.is_solved else None
 
@@ -115,63 +111,65 @@ class Sudoku:
         return set([(r,c) for r in range(size) for c in range(size) if board[r][c] is EMPTY])
     
     @staticmethod
-    def generate_puzzle_board(minirows: int = 3, minicols: Optional[int] = None,
-                        blank_proportion: float = 0.5) -> Board:
+    def get_empty_board(minirows: int = 3, minicols: Optional[int] = None) -> Board:
+        minicols = minicols if minicols else minirows
+        size = minirows * minicols
+        return [[EMPTY] * size for _ in range(size)]
+    
+    def generate_puzzle_board(self, blank_proportion: float = 0.5) -> Board:
         """
-        Generate a random sudoku puzzle. We do so in the following way:
+        Generate a new random sudoku puzzle and save in self.board. We do so in the following way:
         1. Generate a complete board with _generate_complete_board().
         2. Randomly remove `blank_proportion` of the cells.
         3. Use backtracking_solve() to check if the solution is unique. If not, keeping adding
            cells back until the solution is unique.
         """
-        minicols = minicols if minicols else minirows
-        size = minirows * minicols
-        complete_board = Sudoku._generate_complete_board(minirows, minicols)
+        assert blank_proportion > 0 and blank_proportion < 1, 'blank_proportion must be in (0,1)'
+        complete_board = self._generate_complete_board()
 
-        num_cells_to_remove = round(size * size * blank_proportion)
+        num_cells_to_remove = round(self.size * self.size * blank_proportion)
         puzzle_board = Sudoku._copy_board(complete_board)
-        cells_to_remove = random.sample([(r,c) for r in range(size) for c in range(size)],
+        cells_to_remove = random.sample([(r,c) for r in range(self.size) for c in range(self.size)],
                                         num_cells_to_remove)
         for (r,c) in cells_to_remove:
             puzzle_board[r][c] = EMPTY
 
         # get solutions for this board, then keeping adding cells until solution is unique
-        sudoku_solver = _SudokuSolver(Sudoku(minirows, minicols, puzzle_board))
+        sudoku_solver = _SudokuSolver(Sudoku(self.minirows, self.minicols, puzzle_board))
         solution_list = sudoku_solver.backtracking_solve()
         while len(solution_list) > 1:
             r,c = cells_to_remove.pop()
             puzzle_board[r][c] = complete_board[r][c]
             solution_list = [board for board in solution_list if board[r][c] == complete_board[r][c]]
 
-        return puzzle_board
+        self.board = puzzle_board
+        self.is_valid_board = True
+        self.blank_count = len(self._get_empty_cells(self.board))
+        self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
+        self.solution = self.board if self.is_solved else None
     
-    @staticmethod
-    def _generate_complete_board(minirows: int = 3, minicols: Optional[int] = None) -> Board:
+    def _generate_complete_board(self) -> Board:
         """
         Generate a random complete sudoku board.
         We do so by randomly generating the first row, then filling everything else in
         one-by-one, with backtracking to ensure validity.
         """
-        minicols = minicols if minicols else minirows
-        size = minirows * minicols
-        board = [[EMPTY] * size for _ in range(size)]
-        board[0] = list(range(1, size+1))
+        board = [[EMPTY] * self.size for _ in range(self.size)]
+        board[0] = list(range(1, self.size+1))
         random.shuffle(board[0])
 
         empty_cells = Sudoku._get_empty_cells(board)
         candidates_dict = {}
         for (r,c) in empty_cells:
-            candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
-                r, c, minirows, minicols, board)
+            candidates_dict[(r,c)] = self._get_candidates_for_cell(r, c, board)
             
         solution_list = []
-        Sudoku._complete_board_recursion(board, candidates_dict, solution_list, minirows, minicols)
+        self._complete_board_recursion(board, candidates_dict, solution_list)
 
         return solution_list[0]
 
-    @staticmethod
-    def _complete_board_recursion(board: Board, candidates_dict: Dict[Tuple[int, int], Set[int]],
-                                  solution_list: List[Board], minirows: int, minicols: int) -> Board:
+    def _complete_board_recursion(self, board: Board, candidates_dict: Dict[Tuple[int, int], Set[int]],
+                                  solution_list: List[Board]) -> Board:
         if len(candidates_dict) == 0:
             # recursion base case 1: no more empty cells
             solution_list.append(Sudoku._copy_board(board))
@@ -191,15 +189,13 @@ class Sudoku:
                 # explore
                 original_candidates_dict = {current_cell: current_candidates}
                 board[current_row][current_col] = candidate
-                current_neighbors = _SudokuSolver._get_neighbors_for_cell(
-                    current_row, current_col, minirows, minicols)
+                current_neighbors = self._get_neighbors_for_cell(current_row, current_col)
                 current_neighbors = current_neighbors & set(candidates_dict.keys())
                 for (r,c) in current_neighbors:
                     original_candidates_dict[(r,c)] = candidates_dict[(r,c)]
-                    candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
-                        r, c, minirows, minicols, board)
+                    candidates_dict[(r,c)] = self._get_candidates_for_cell(r, c, board)
                 del candidates_dict[current_cell]
-                if Sudoku._complete_board_recursion(board, candidates_dict, solution_list, minirows, minicols):
+                if self._complete_board_recursion(board, candidates_dict, solution_list):
                     return True
 
                 # undo recursion
@@ -208,6 +204,31 @@ class Sudoku:
                     candidates_dict[cell] = original_candidates_dict[cell]
             return False
     
+    def _get_candidates_for_cell(self, r: int, c: int, board: Board) -> Set[int]:
+        """
+        Return possible values in (r,c) given the current board. It ignores the value (if present)
+        at (r,c).
+        """
+        candidates = set(range(1, self.size + 1))
+
+        neighbors = self._get_neighbors_for_cell(r, c)
+        neighbor_values = set([board[i][j] for (i,j) in neighbors]) - {EMPTY}
+
+        return candidates - neighbor_values
+    
+    def _get_neighbors_for_cell(self, r: int, c: int) -> Set[Tuple[int, int]]:
+        """
+        Return cells which are in the same row, column or box as (r,c). Does not include (r,c).
+        """
+        row_neighbors = set([(row, c) for row in range(self.size) if row != r])
+        col_neighbors = set([(r, col) for col in range(self.size) if col != c])
+        box_corner_row = (r // self.minirows) * self.minirows
+        box_corner_col = (c // self.minicols) * self.minicols
+        box_neighbors = set([(box_corner_row+row, box_corner_col+col) \
+                                  for row in range(self.minirows) for col in range(self.minicols) \
+                                    if box_corner_row+row != r or box_corner_col+col != c])
+        return row_neighbors | col_neighbors | box_neighbors
+
     @staticmethod
     def get_board_ascii(minirows: int = 3, minicols: Optional[int] = None, board: Board = None) -> str:
         minicols = minicols if minicols else minirows
@@ -252,6 +273,7 @@ class _SudokuSolver:
         self.minirows = sudoku.minirows
         self.minicols = sudoku.minicols
         self.size = sudoku.size
+        self.sudoku = sudoku
         self.is_valid_board = sudoku.is_valid_board
         self.original_board = sudoku.board
     
@@ -322,8 +344,8 @@ class _SudokuSolver:
         empty_cells = Sudoku._get_empty_cells(self.original_board)
         candidates_dict = {}
         for (r,c) in empty_cells:
-            candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
-                r, c, self.minirows, self.minicols, self.original_board)
+            candidates_dict[(r,c)] = self.sudoku._get_candidates_for_cell(
+                r, c, self.original_board)
         
         solution_list = []
         current_board = Sudoku._copy_board(self.original_board)
@@ -352,13 +374,11 @@ class _SudokuSolver:
                 # explore
                 original_candidates_dict = {current_cell: current_candidates}
                 current_board[current_row][current_col] = candidate
-                current_neighbors = _SudokuSolver._get_neighbors_for_cell(
-                    current_row, current_col, self.minirows, self.minicols)
+                current_neighbors = self.sudoku._get_neighbors_for_cell(current_row, current_col)
                 current_neighbors = current_neighbors & set(candidates_dict.keys())
                 for (r,c) in current_neighbors:
                     original_candidates_dict[(r,c)] = candidates_dict[(r,c)]
-                    candidates_dict[(r,c)] = _SudokuSolver._get_candidates_for_cell(
-                        r, c, self.minirows, self.minicols, current_board)
+                    candidates_dict[(r,c)] = self.sudoku._get_candidates_for_cell(r, c, current_board)
                 del candidates_dict[current_cell]
                 self._do_backtracking(current_board, candidates_dict, solution_list)
 
@@ -366,39 +386,6 @@ class _SudokuSolver:
                 current_board[current_row][current_col] = EMPTY
                 for cell in original_candidates_dict:
                     candidates_dict[cell] = original_candidates_dict[cell]
-
-    @staticmethod
-    def _get_candidates_for_cell(r: int, c: int, minirows: int = 3, minicols: Optional[int] = None,
-                                 board: Board = None) -> Set[int]:
-        """
-        Return possible values in (r,c) given the current board. It ignores the value (if present)
-        at (r,c).
-        """
-        minicols = minicols if minicols else minirows
-        size = minirows * minicols
-        candidates = set(range(1, size + 1))
-
-        neighbors = _SudokuSolver._get_neighbors_for_cell(r, c, minirows, minicols)
-        neighbor_values = set([board[i][j] for (i,j) in neighbors]) - {EMPTY}
-
-        return candidates - neighbor_values
-    
-    @staticmethod
-    def _get_neighbors_for_cell(r: int, c: int, minirows: int = 3, minicols: Optional[int] = None) \
-        -> Set[Tuple[int, int]]:
-        """
-        Return cells which are in the same row, column or box as (r,c). Does not include (r,c).
-        """
-        minicols = minicols if minicols else minirows
-        size = minirows * minicols
-        row_neighbors = set([(row, c) for row in range(size) if row != r])
-        col_neighbors = set([(r, col) for col in range(size) if col != c])
-        box_corner_row = (r // minirows) * minirows
-        box_corner_col = (c // minicols) * minicols
-        box_neighbors = set([(box_corner_row+row, box_corner_col+col) \
-                                  for row in range(minirows) for col in range(minicols) \
-                                    if box_corner_row+row != r or box_corner_col+col != c])
-        return row_neighbors | col_neighbors | box_neighbors
 
 
 if __name__ == '__main__':
