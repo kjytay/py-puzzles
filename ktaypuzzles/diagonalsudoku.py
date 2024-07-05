@@ -55,34 +55,12 @@ class DiagonalSudoku(Sudoku):
 
     @override
     def validate(self) -> bool:
-        """
-        Check if the board is valid, i.e. no number is repeated in a row/column/box.
-        (Note that this does not automatically mean that a solution exists.)
-        """
-        row_numbers = [[False for _ in range(self.size)] for _ in range(self.size)]
-        col_numbers = [[False for _ in range(self.size)] for _ in range(self.size)]
-        box_numbers = [[False for _ in range(self.size)] for _ in range(self.size)]
-        diagonal_numbers = [[False for _ in range(self.size)] for _ in range(2)]
+        # check basic sudoku
+        if super().validate() is False:
+            return False
 
-        for row in range(self.size):
-            for col in range(self.size):
-                cell = self.board[row][col]
-                box = (row // self.minirows) * self.minirows + (col // self.minicols)
-                if cell == EMPTY:
-                    continue
-                elif isinstance(cell, int):
-                    # check if the number in this cell has appeared in row/col/box before
-                    if row_numbers[row][cell - 1]:
-                        return False
-                    elif col_numbers[col][cell - 1]:
-                        return False
-                    elif box_numbers[box][cell - 1]:
-                        return False
-                    row_numbers[row][cell - 1] = True
-                    col_numbers[col][cell - 1] = True
-                    box_numbers[box][cell - 1] = True
-        
         # check diagonals
+        diagonal_numbers = [[False for _ in range(self.size)] for _ in range(2)]
         for i in range(self.size):
             cell = self.board[i][i]
             if cell == EMPTY:
@@ -152,17 +130,11 @@ class DiagonalSudoku(Sudoku):
         Return cells which are in the same row, column or box as (r,c). If (r,c) is on a main
         diagonal, other cells on that main diagonal are included too.
         """
-        row_neighbors = set([(row, c) for row in range(self.size) if row != r])
-        col_neighbors = set([(r, col) for col in range(self.size) if col != c])
-        box_corner_row = (r // self.minirows) * self.minirows
-        box_corner_col = (c // self.minicols) * self.minicols
-        box_neighbors = set([(box_corner_row+row, box_corner_col+col) \
-                                  for row in range(self.minirows) for col in range(self.minicols) \
-                                    if box_corner_row+row != r or box_corner_col+col != c])
+        basic_neighbors = super()._get_neighbors_for_cell(r, c)
         l2r_neighbors = set([(i,i) for i in range(self.size) if i != r]) if r == c else set()
         r2l_neighbors = set([(i,self.size-1-i) for i in range(self.size) if i != r]) \
             if r+c == self.size-1 else set()
-        return row_neighbors | col_neighbors | box_neighbors | l2r_neighbors | r2l_neighbors
+        return basic_neighbors | l2r_neighbors | r2l_neighbors
 
     @override
     def __str__(self) -> str:
