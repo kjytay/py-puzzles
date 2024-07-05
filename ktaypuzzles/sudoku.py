@@ -10,6 +10,9 @@ or None (indicating an empty cell).
 Board = List[List[Union[int, None]]]
 EMPTY = None
 
+"""
+Basic sudoku puzzle.
+"""
 class Sudoku:
 
     def __init__(self, minirows: int = 3, minicols: Optional[int] = None,
@@ -25,7 +28,6 @@ class Sudoku:
         If not provided, generates a random board with ~`blank_proportion` cells empty.
 
         :raises AssertionError: If the minirows, minicols, or size of the board is invalid.
-        :raises Exception: If given board is invalid.
         """
         self.minirows = minirows
         self.minicols = minicols if minicols else minirows
@@ -65,14 +67,11 @@ class Sudoku:
     def validate(self) -> bool:
         """
         Check if the board is valid, i.e. no number is repeated in a row/column/box.
-        (Note that this does not automatically mean that a solution exists.
+        (Note that this does not automatically mean that a solution exists.)
         """
-        row_numbers = [[False for _ in range(self.size)]
-                       for _ in range(self.size)]
-        col_numbers = [[False for _ in range(self.size)]
-                       for _ in range(self.size)]
-        box_numbers = [[False for _ in range(self.size)]
-                       for _ in range(self.size)]
+        row_numbers = [[False for _ in range(self.size)] for _ in range(self.size)]
+        col_numbers = [[False for _ in range(self.size)] for _ in range(self.size)]
+        box_numbers = [[False for _ in range(self.size)] for _ in range(self.size)]
 
         for row in range(self.size):
             for col in range(self.size):
@@ -98,9 +97,9 @@ class Sudoku:
         Solve the sudoku board. Board is saved as self.solution, and also returned.
         """
         sudoku_solver = _SudokuSolver(self)
-        solution_board = sudoku_solver.ip_solve()
-        self.is_solved = solution_board is not None
-        self.solution = solution_board
+        solution_board = sudoku_solver.backtracking_solve()
+        self.is_solved = len(solution_board) > 0
+        self.solution = solution_board[0] if self.is_solved else None
         return solution_board
     
     @staticmethod
@@ -378,23 +377,17 @@ class _SudokuSolver:
         minicols = minicols if minicols else minirows
         size = minirows * minicols
         candidates = set(range(1, size + 1))
-        current_row_values = set([board[r][col] for col in range(size) if col != c]) - {EMPTY}
-        candidates = candidates - current_row_values
-        current_col_values = set([board[row][c] for row in range(size) if row != r]) - {EMPTY}
-        candidates = candidates - current_col_values
-        box_corner_row = (r // minirows) * minirows
-        box_corner_col = (c // minicols) * minicols
-        current_box_values = set([board[box_corner_row+row][box_corner_col+col] \
-                                  for row in range(minirows) for col in range(minicols) \
-                                    if box_corner_row+row != r or box_corner_col+col != c]) - {EMPTY}
-        candidates = candidates - current_box_values
-        return candidates
+
+        neighbors = _SudokuSolver._get_neighbors_for_cell(r, c, minirows, minicols)
+        neighbor_values = set([board[i][j] for (i,j) in neighbors]) - {EMPTY}
+
+        return candidates - neighbor_values
     
     @staticmethod
     def _get_neighbors_for_cell(r: int, c: int, minirows: int = 3, minicols: Optional[int] = None) \
         -> Set[Tuple[int, int]]:
         """
-        Return cells which are in the same row, column or box as (r,c).
+        Return cells which are in the same row, column or box as (r,c). Does not include (r,c).
         """
         minicols = minicols if minicols else minirows
         size = minirows * minicols

@@ -153,7 +153,6 @@ def test_backtracking_solve_invalid():
 
 def test_get_candidates_for_cell():
     sudoku = Sudoku(board=VALID_BOARD_1)
-    sudoku_solver = _SudokuSolver(sudoku)
     actual_candidates = _SudokuSolver._get_candidates_for_cell(2, 8, board=VALID_BOARD_1)
     expected_candidates = {2, 4, 6, 7}
     assert actual_candidates == expected_candidates
