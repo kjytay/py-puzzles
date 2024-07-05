@@ -60,11 +60,12 @@ test_sudoku.show_solution()
 # +-------+-------+-------+
 ```
 
-If `board` is not passed to the `Sudoku` constructor, a random board is generated with approximately `blank_proportion` cells empty (default 0.5).
+If `board` is not passed to the `Sudoku` constructor, the board defaults to the empty board. You can generate a random board with approximately `blank_proportion` cells empty (default 0.5) by calling `generate_puzzle_board()`.
 ```
 import random
 random.seed(1)
 sudoku = Sudoku(2,3)
+sudoku.generate_puzzle_board()
 sudoku.show()
 # +-------+-------+
 # |   4 6 |   5 2 |
@@ -91,7 +92,8 @@ sudoku.show_solution()
 # +-------+-------+
 
 random.seed(1)
-sudoku = Sudoku(blank_proportion=0.6)
+sudoku = Sudoku()
+sudoku.generate_puzzle_board(blank_proportion=0.6)
 sudoku.show()
 # +-------+-------+-------+
 # |       |   4 1 |     3 |
@@ -105,5 +107,21 @@ sudoku.show()
 # | 7   3 |   1   |   9   |
 # |       | 6 3   | 8 1   |
 # | 8   2 | 9 7   |   6   |
+# +-------+-------+-------+
+
+# Running generate_puzzle_board() a second time will overwrite the previous puzzle
+sudoku.generate_puzzle_board(blank_proportion=0.5)
+# +-------+-------+-------+
+# |   6 2 |   4   | 7 8 5 |
+# | 4     |       | 6 9 1 |
+# | 7     | 6   8 | 4   2 |
+# +-------+-------+-------+
+# | 9 2 7 | 5 3   | 8     |
+# |     4 |   2   | 5 7 9 |
+# |       | 4     |       |
+# +-------+-------+-------+
+# |   4   | 7   2 |   5   |
+# | 2     |   8 4 | 9   7 |
+# | 8   3 |   6 5 |   1   |
 # +-------+-------+-------+
 ```
