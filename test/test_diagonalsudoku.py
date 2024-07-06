@@ -1,5 +1,3 @@
-import pytest
-
 from ktaypuzzles.diagonalsudoku import DiagonalSudoku, _DiagonalSudokuSolver
 
 def test_valid_board():

@@ -1,7 +1,6 @@
-import cvxpy as cp
 import random
 from overrides import override
-from typing import Dict, Iterable, List, Optional, Union, Set, Tuple
+from typing import Iterable, Optional, Union, Set, Tuple
 
 from .sudoku import Board, EMPTY, Sudoku, _SudokuSolver
 
