@@ -11,48 +11,7 @@ class KnightSudoku(Sudoku):
 
     def __init__(self, minirows: int = 3, minicols: Optional[int] = None,
                  board: Optional[Iterable[Iterable[Union[int, None]]]] = None):
-        """
-        Initializes a knight Sudoku board
-
-        :param minirows: Integer representing the rows of the small Sudoku grid. Defaults to 3.
-        :param minicols: Optional integer representing the columns of the small Sudoku grid.
-        If not provided, defaults to the value of `minirows`.
-        :param board: Optional iterable for a the initial state of the Sudoku board.
-        If not provided, generates an empty board.
-
-        :raises AssertionError: If the minirows or size of the board is invalid.
-        """
-        self.minirows = minirows
-        self.minicols = minicols if minicols else minirows
-        self.size = self.minirows * self.minicols
-
-        assert self.minirows > 0, 'minirows cannot be less than 1'
-        assert self.minicols > 0, 'minicols cannot be less than 1'
-        assert self.size > 1, 'Board size cannot be 1 x 1'
-
-        if board:
-            assert len(board) == self.size, '# rows in board ({}) should be {}'.format(len(board), self.size)
-            assert len(board[0]) == self.size, '# cols in board ({}) should be {}'.format(len(board[0]), self.size)
-            self.board: Board = [
-                [cell for cell in row] for row in board]
-            # replace anything other than valid integers with an empty cell
-            for row in self.board:
-                for j in range(len(row)):
-                    if not row[j] in range(1, self.size + 1):
-                        row[j] = EMPTY
-            if self.validate() is False:
-                self.is_valid_board = False
-                print('Given board is invalid! No solution exists.')
-            else:
-                self.is_valid_board = True
-        else:
-            # if board was not passed in set board as empty board
-            self.board = Sudoku.get_empty_board(self.minirows, self.minicols)
-            self.is_valid_board = True
-
-        self.blank_count = len(self._get_empty_cells(self.board))
-        self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
-        self.solution = self.board if self.is_solved else None
+        super().__init__(minirows, minicols, board)
 
     @override
     def validate(self) -> bool:
