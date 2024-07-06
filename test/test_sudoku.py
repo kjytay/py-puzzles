@@ -1,4 +1,3 @@
-import pytest
 import random
 from ktaypuzzles.sudoku import Board, EMPTY, Sudoku, _SudokuSolver
 

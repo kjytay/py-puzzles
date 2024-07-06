@@ -5,23 +5,25 @@ from typing import Iterable, Optional, Union, Set, Tuple
 from .sudoku import Board, EMPTY, Sudoku, _SudokuSolver
 
 """
-Sudoku puzzle with diagonal constraints: numbers must be unique on each main diagonal.
+Sudoku puzzle with king constraint. The same number cannot appear twice within a king's move.
 """
-class DiagonalSudoku(Sudoku):
+class KingSudoku(Sudoku):
 
-    def __init__(self, minirows: int = 3,
+    def __init__(self, minirows: int = 3, minicols: Optional[int] = None,
                  board: Optional[Iterable[Iterable[Union[int, None]]]] = None):
         """
-        Initializes a diagonal Sudoku board
+        Initializes a king Sudoku board
 
         :param minirows: Integer representing the rows of the small Sudoku grid. Defaults to 3.
+        :param minicols: Optional integer representing the columns of the small Sudoku grid.
+        If not provided, defaults to the value of `minirows`.
         :param board: Optional iterable for a the initial state of the Sudoku board.
         If not provided, generates an empty board.
 
         :raises AssertionError: If the minirows or size of the board is invalid.
         """
         self.minirows = minirows
-        self.minicols = minirows
+        self.minicols = minicols if minicols else minirows
         self.size = self.minirows * self.minicols
 
         assert self.minirows > 0, 'minirows cannot be less than 1'
@@ -58,24 +60,17 @@ class DiagonalSudoku(Sudoku):
         if super().validate() is False:
             return False
 
-        # check diagonals
-        diagonal_numbers = [[False for _ in range(self.size)] for _ in range(2)]
-        for i in range(self.size):
-            cell = self.board[i][i]
-            if cell == EMPTY:
-                continue
-            elif isinstance(cell, int):
-                if diagonal_numbers[0][cell - 1]:
-                    return False
-                diagonal_numbers[0][cell - 1] = True
-        for i in range(self.size):
-            cell = self.board[i][self.size-1-i]
-            if cell == EMPTY:
-                continue
-            elif isinstance(cell, int):
-                if diagonal_numbers[1][cell - 1]:
-                    return False
-                diagonal_numbers[1][cell - 1] = True
+        # check king moves
+        for r in range(self.size):
+            for c in range(self.size):
+                cell = self.board[r][c]
+                if cell == EMPTY:
+                    continue
+                elif isinstance(cell, int):
+                    cell_king_neighbors = self._get_king_neighbors(r, c)
+                    for (i, j) in cell_king_neighbors:
+                        if cell == self.board[i][j]:
+                            return False
 
         return True
 
@@ -84,14 +79,14 @@ class DiagonalSudoku(Sudoku):
         """
         Solve the sudoku board. Board is saved as self.solution, and also returned.
         """
-        sudoku_solver = _DiagonalSudokuSolver(self)
+        sudoku_solver = _KingSudokuSolver(self)
         solution_board = sudoku_solver.backtracking_solve()
         self.is_solved = len(solution_board) > 0
         self.solution = solution_board[0] if self.is_solved else None
         return solution_board
     
     @override
-    def generate_puzzle_board(self, blank_proportion: float = 0.5) -> Board:
+    def generate_puzzle_board(self, blank_proportion: float = 0.7) -> Board:
         """
         Generate a new random sudoku puzzle and save in self.board. We do so in the following way:
         1. Generate a complete board with _generate_complete_board().
@@ -110,7 +105,7 @@ class DiagonalSudoku(Sudoku):
             puzzle_board[r][c] = EMPTY
 
         # get solutions for this board, then keeping adding cells until solution is unique
-        sudoku_solver = _DiagonalSudokuSolver(DiagonalSudoku(self.minirows, puzzle_board))
+        sudoku_solver = _KingSudokuSolver(KingSudoku(self.minirows, self.minicols, puzzle_board))
         solution_list = sudoku_solver.backtracking_solve()
         while len(solution_list) > 1:
             r,c = cells_to_remove.pop()
@@ -123,6 +118,17 @@ class DiagonalSudoku(Sudoku):
         self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
         self.solution = self.board if self.is_solved else None
      
+    def _get_king_neighbors(self, r: int, c: int) -> Set[Tuple[int, int]]:
+        """
+        Return cells which are a king's move away from (r,c). (r,c) itself is excluded.
+        """
+        king_neighbors = [(r-1,c-1), (r-1,c), (r-1,c+1),
+                          (r,c-1), (r,c+1),
+                          (r+1,c-1), (r+1,c), (r+1,c+1)]
+        king_neighbors = [x for x in king_neighbors if x[0] >= 0 and x[0] < self.size and \
+                          x[1] >= 0 and x[1] < self.size]
+        return set(king_neighbors)
+    
     @override
     def _get_neighbors_for_cell(self, r: int, c: int) -> Set[Tuple[int, int]]:
         """
@@ -130,27 +136,24 @@ class DiagonalSudoku(Sudoku):
         diagonal, other cells on that main diagonal are included too.
         """
         basic_neighbors = super()._get_neighbors_for_cell(r, c)
-        l2r_neighbors = set([(i,i) for i in range(self.size) if i != r]) if r == c else set()
-        r2l_neighbors = set([(i,self.size-1-i) for i in range(self.size) if i != r]) \
-            if r+c == self.size-1 else set()
-        return basic_neighbors | l2r_neighbors | r2l_neighbors
-
+        return basic_neighbors | self._get_king_neighbors(r, c)
+    
     @override
     def __str__(self) -> str:
         """
         Prints the original board.
         """
         return '''
-------------------------------------
-{}x{} ({}x{}) DIAGONAL SUDOKU PUZZLE
-------------------------------------
+--------------------------------
+{}x{} ({}x{}) KING SUDOKU PUZZLE
+--------------------------------
 {}
         '''.format(self.size, self.size, self.minirows, self.minicols,
                    Sudoku.get_board_ascii(self.minirows, self.minicols, self.board))
     
 
-class _DiagonalSudokuSolver(_SudokuSolver):
-    def __init__(self, sudoku: DiagonalSudoku):
+class _KingSudokuSolver(_SudokuSolver):
+    def __init__(self, sudoku: KingSudoku):
         super().__init__(sudoku)
     
     @override
@@ -160,17 +163,18 @@ class _DiagonalSudokuSolver(_SudokuSolver):
 
 if __name__ == '__main__':
 
-    test_sudoku = DiagonalSudoku(
+    # board taken from Cracking the Cryptic app
+    test_sudoku = KingSudoku(
         board = [
-            [9,0,0,0,0,0,0,0,0],
-            [0,5,8,0,0,9,4,0,0],
-            [7,0,0,0,5,0,0,0,0],
-            [8,0,3,0,2,0,5,0,0],
-            [1,0,0,0,0,5,8,0,3],
-            [0,0,0,8,7,0,1,2,0],
-            [0,8,9,2,1,0,7,0,0],
-            [6,0,5,0,4,0,9,8,0],
-            [0,1,7,5,0,0,0,0,0]
+            [0,0,0,0,0,2,0,0,0],
+            [0,0,0,4,0,0,8,0,0],
+            [0,0,0,0,0,9,7,0,0],
+            [4,0,5,0,0,0,0,2,0],
+            [0,0,9,0,0,0,1,0,0],
+            [0,8,0,0,0,0,4,0,6],
+            [0,0,4,1,0,0,0,0,0],
+            [0,0,2,0,0,6,0,0,0],
+            [0,0,0,8,0,0,0,0,0]
         ])
     test_sudoku.show()
     
