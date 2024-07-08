@@ -136,6 +136,14 @@ class NonConsecSudoku(Sudoku):
         '''.format(self.size, self.size, self.minirows, self.minicols,
                    Sudoku.get_board_ascii(self.minirows, self.minicols, self.board))
     
+    @override
+    def show_as_image(self, title: str = 'Non-Consecutive Sudoku', save_path: str = '') -> None:
+        self._get_board_image(self.board, title=title, save_path=save_path)
+    
+    @override
+    def show_solution_as_image(self, title: str = 'Non-Consecutive Sudoku', save_path: str = '') -> None:
+        self._get_board_image(self.solution, self.board, title=title, save_path=save_path)
+    
 
 class _NonConsecSudokuSolver(_SudokuSolver):
     def __init__(self, sudoku: NonConsecSudoku):
@@ -165,6 +173,3 @@ if __name__ == '__main__':
     
     test_sudoku.solve()
     test_sudoku.show_solution()
-
-    test_sudoku.generate_puzzle_board(0.1)
-    test_sudoku.show()

@@ -110,6 +110,14 @@ class KingSudoku(Sudoku):
         '''.format(self.size, self.size, self.minirows, self.minicols,
                    Sudoku.get_board_ascii(self.minirows, self.minicols, self.board))
     
+    @override
+    def show_as_image(self, title: str = 'King Sudoku', save_path: str = '') -> None:
+        self._get_board_image(self.board, title=title, save_path=save_path)
+    
+    @override
+    def show_solution_as_image(self, title: str = 'King Sudoku', save_path: str = '') -> None:
+        self._get_board_image(self.solution, self.board, title=title, save_path=save_path)
+    
 
 class _KingSudokuSolver(_SudokuSolver):
     def __init__(self, sudoku: KingSudoku):
