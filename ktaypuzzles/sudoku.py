@@ -268,19 +268,20 @@ class Sudoku:
             print(Sudoku.get_board_ascii(self.minirows, self.minicols, self.solution))
         return
     
-    def show_as_image(self) -> None:
+    def show_as_image(self, title: str = 'Sudoku', save_path: str = '') -> None:
         """
         Draw image of the original board.
         """
-        self._get_board_image(self.board)
+        self._get_board_image(self.board, title=title, save_path=save_path)
     
-    def show_solution_as_image(self) -> None:
+    def show_solution_as_image(self, title: str = 'Sudoku', save_path: str = '') -> None:
         """
         Draw image of the solution board.
         """
-        self._get_board_image(self.solution, self.board)
+        self._get_board_image(self.solution, self.board, title=title, save_path=save_path)
 
-    def _get_board_image(self, board: Board, original_board: Board = None, title: str = "Sudoku") -> None:
+    def _get_board_image(self, board: Board, original_board: Board = None,
+                         title: str = 'Sudoku', save_path: str = '') -> None:
         """
         Draw an image of the given board. Digits in both board and original_board are in black,
         digits in just board are in red.
@@ -317,6 +318,9 @@ class Sudoku:
 
         # add title
         ax.set_title(title, fontsize=20, pad=20)
+
+        if save_path is not '':
+            plt.savefig(save_path, bbox_inches='tight')
         
         plt.show()
 
