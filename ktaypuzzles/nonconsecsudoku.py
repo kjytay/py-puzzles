@@ -2,33 +2,36 @@ import random
 from overrides import override
 from typing import Iterable, Optional, Union, Set, Tuple
 
-from .sudoku import Board, EMPTY, Sudoku, _SudokuSolver
+from .sudoku import Board, Dict, EMPTY, List, Sudoku, _SudokuSolver
 
 """
-Sudoku puzzle with knight constraint. The same number cannot appear twice within a knight's move.
+Sudoku puzzle with non-consecutive constraint. Any two orthogonally adjacent cells cannot
+contain consecutive numbers.
 """
-class KnightSudoku(Sudoku):
+class NonConsecSudoku(Sudoku):
 
     def __init__(self, minirows: int = 3, minicols: Optional[int] = None,
                  board: Optional[Iterable[Iterable[Union[int, None]]]] = None):
         super().__init__(minirows, minicols, board)
-
+    
     @override
     def validate(self) -> bool:
         # check basic sudoku
         if super().validate() is False:
             return False
 
-        # check knight moves
+        # check non-consecutive constraint
         for r in range(self.size):
             for c in range(self.size):
                 cell = self.board[r][c]
                 if cell == EMPTY:
                     continue
                 elif isinstance(cell, int):
-                    cell_knight_neighbors = self._get_knight_neighbors(r, c)
-                    for (i, j) in cell_knight_neighbors:
-                        if cell == self.board[i][j]:
+                    cell_orthogonal_neighbors = self._get_orthogonal_neighbors(r, c)
+                    for (i, j) in cell_orthogonal_neighbors:
+                        if self.board[i][j] == EMPTY:
+                            continue
+                        elif abs(cell - self.board[i][j]) <= 1:
                             return False
 
         return True
@@ -38,14 +41,14 @@ class KnightSudoku(Sudoku):
         """
         Solve the sudoku board. Board is saved as self.solution, and also returned.
         """
-        sudoku_solver = _KnightSudokuSolver(self)
+        sudoku_solver = _NonConsecSudokuSolver(self)
         solution_board = sudoku_solver.backtracking_solve()
         self.is_solved = len(solution_board) > 0
         self.solution = solution_board[0] if self.is_solved else None
         return solution_board
-    
+
     @override
-    def generate_puzzle_board(self, blank_proportion: float = 0.65) -> Board:
+    def generate_puzzle_board(self, blank_proportion: float = 0.5) -> Board:
         """
         Generate a new random sudoku puzzle and save in self.board. We do so in the following way:
         1. Generate a complete board with _generate_complete_board().
@@ -64,7 +67,7 @@ class KnightSudoku(Sudoku):
             puzzle_board[r][c] = EMPTY
 
         # get solutions for this board, then keeping adding cells until solution is unique
-        sudoku_solver = _KnightSudokuSolver(KnightSudoku(self.minirows, self.minicols, puzzle_board))
+        sudoku_solver = _NonConsecSudokuSolver(NonConsecSudoku(self.minirows, self.minicols, puzzle_board))
         solution_list = sudoku_solver.backtracking_solve()
         while len(solution_list) > 1:
             r,c = cells_to_remove.pop()
@@ -76,52 +79,74 @@ class KnightSudoku(Sudoku):
         self.blank_count = len(self._get_empty_cells(self.board))
         self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
         self.solution = self.board if self.is_solved else None
-     
-    def _get_knight_neighbors(self, r: int, c: int) -> Set[Tuple[int, int]]:
-        """
-        Return cells which are a king's move away from (r,c). (r,c) itself is excluded.
-        """
-        knight_neighbors = [(r-2,c-1), (r-2,c+1),
-                            (r+2,c-1), (r+2,c+1),
-                            (r-1,c-2), (r+1,c-2),
-                            (r-1,c+2), (r+1,c+2)]
-        knight_neighbors = [x for x in knight_neighbors if x[0] >= 0 and x[0] < self.size and \
-                          x[1] >= 0 and x[1] < self.size]
-        return set(knight_neighbors)
     
     @override
-    def _get_neighbors_for_cell(self, r: int, c: int) -> Set[Tuple[int, int]]:
+    def _generate_complete_board(self) -> Board:
         """
-        Return cells which are in the same row, column or box as (r,c), or which are a knight's
-        move away from (r,c).
+        Generate a random complete sudoku board.
+        We do so by randomly filling every cell one-by-one, with backtracking to ensure validity.
+        NOTE: Right now this is pretty slow as backtracking takes a long time to find a valid
+        non-consecutive board. TODO Find a better strategy for generating such a board.
         """
-        basic_neighbors = super()._get_neighbors_for_cell(r, c)
-        return basic_neighbors | self._get_knight_neighbors(r, c)
-    
+        board = [[EMPTY] * self.size for _ in range(self.size)]
+
+        empty_cells = Sudoku._get_empty_cells(board)
+        candidates_dict = {}
+        for (r,c) in empty_cells:
+            candidates_dict[(r,c)] = self._get_candidates_for_cell(r, c, board)
+            
+        solution_list = []
+        self._complete_board_recursion(board, candidates_dict, solution_list)
+
+        return solution_list[0]
+
+    def _get_orthogonal_neighbors(self, r: int, c: int) -> Set[Tuple[int, int]]:
+        """
+        Return cells which are orthogonal to (r,c). (r,c) itself is excluded.
+        """
+        orthogonal_neighbors = [(r,c-1), (r,c+1), (r-1,c), (r+1,c)]
+        orthogonal_neighbors = [x for x in orthogonal_neighbors if x[0] >= 0 and x[0] < self.size and \
+                          x[1] >= 0 and x[1] < self.size]
+        return set(orthogonal_neighbors)
+
+    @override
+    def _get_candidates_for_cell(self, r: int, c: int, board: Board) -> Set[int]:
+        """
+        Return possible values in (r,c) given the current board. It ignores the value (if present)
+        at (r,c).
+        """
+        # get candidates based on basic sudoku
+        candidates = super()._get_candidates_for_cell(r, c, board)
+        orthogonal_values = [board[i][j] for (i,j) in self._get_orthogonal_neighbors(r,c) \
+                                 if board[i][j] in list(range(1, self.size+1))]
+
+        return candidates - set(orthogonal_values) - set([x-1 for x in orthogonal_values]) \
+            - set([x+1 for x in orthogonal_values])
+
     @override
     def __str__(self) -> str:
         """
         Prints the original board.
         """
         return '''
-----------------------------------
-{}x{} ({}x{}) KNIGHT SUDOKU PUZZLE
-----------------------------------
+-------------------------------------------
+{}x{} ({}x{}) NON-CONSECUTIVE SUDOKU PUZZLE
+-------------------------------------------
 {}
         '''.format(self.size, self.size, self.minirows, self.minicols,
                    Sudoku.get_board_ascii(self.minirows, self.minicols, self.board))
     
     @override
-    def show_as_image(self, title: str = 'Knight Sudoku', save_path: str = '') -> None:
+    def show_as_image(self, title: str = 'Non-Consecutive Sudoku', save_path: str = '') -> None:
         self._get_board_image(self.board, title=title, save_path=save_path)
     
     @override
-    def show_solution_as_image(self, title: str = 'Knight Sudoku', save_path: str = '') -> None:
+    def show_solution_as_image(self, title: str = 'Non-Consecutive Sudoku', save_path: str = '') -> None:
         self._get_board_image(self.solution, self.board, title=title, save_path=save_path)
     
 
-class _KnightSudokuSolver(_SudokuSolver):
-    def __init__(self, sudoku: KnightSudoku):
+class _NonConsecSudokuSolver(_SudokuSolver):
+    def __init__(self, sudoku: NonConsecSudoku):
         super().__init__(sudoku)
     
     @override
@@ -132,16 +157,16 @@ class _KnightSudokuSolver(_SudokuSolver):
 if __name__ == '__main__':
 
     # board taken from Cracking the Cryptic app
-    test_sudoku = KnightSudoku(
+    test_sudoku = NonConsecSudoku(
         board = [
             [0,0,0,0,0,0,0,0,0],
-            [0,8,0,0,3,0,0,9,0],
-            [0,0,1,2,0,5,6,0,0],
-            [0,0,3,4,0,8,7,0,0],
-            [0,2,0,0,6,0,0,5,0],
-            [0,0,7,9,0,1,2,0,0],
-            [0,0,6,8,0,3,4,0,0],
-            [0,4,0,0,7,0,0,1,0],
+            [0,0,0,0,5,0,0,0,0],
+            [0,0,1,0,3,0,2,0,0],
+            [0,0,0,6,0,3,0,0,0],
+            [0,7,4,0,0,0,3,6,0],
+            [0,0,0,4,0,1,0,0,0],
+            [0,0,3,0,4,0,9,0,0],
+            [0,0,0,0,9,0,0,0,0],
             [0,0,0,0,0,0,0,0,0]
         ])
     test_sudoku.show()

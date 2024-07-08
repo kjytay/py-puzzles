@@ -1,4 +1,5 @@
 import cvxpy as cp
+import matplotlib.pyplot as plt
 import random
 from typing import Dict, Iterable, List, Optional, Union, Set, Tuple
 
@@ -266,6 +267,62 @@ class Sudoku:
         if self.solution is not None:
             print(Sudoku.get_board_ascii(self.minirows, self.minicols, self.solution))
         return
+    
+    def show_as_image(self, title: str = 'Sudoku', save_path: str = '') -> None:
+        """
+        Draw image of the original board.
+        """
+        self._get_board_image(self.board, title=title, save_path=save_path)
+    
+    def show_solution_as_image(self, title: str = 'Sudoku', save_path: str = '') -> None:
+        """
+        Draw image of the solution board.
+        """
+        self._get_board_image(self.solution, self.board, title=title, save_path=save_path)
+
+    def _get_board_image(self, board: Board, original_board: Board = None,
+                         title: str = 'Sudoku', save_path: str = '') -> None:
+        """
+        Draw an image of the given board. Digits in both board and original_board are in black,
+        digits in just board are in red.
+        """
+        if Board is None:
+            print('No board provided, returning')
+            return
+        if original_board is None:
+            original_board = board
+         
+        fig, ax = plt.subplots(figsize=(6, 6))
+    
+        # draw main grid (horizontal, then diagonal)
+        for i in range(self.size+1):
+            lw = 2 if i % self.minirows == 0 else 0.5
+            ax.plot([0, self.size], [i, i], color='black', linewidth=lw)
+        for i in range(self.size+1):
+            lw = 2 if i % self.minicols == 0 else 0.5
+            ax.plot([i, i], [0, self.size], color='black', linewidth=lw)
+        
+        # add numbers
+        for i in range(self.size):
+            for j in range(self.size):
+                if board[i][j] in list(range(1, self.size+1)):
+                    fontcolor = 'black' if original_board[i][j] in list(range(1, self.size+1)) else 'red'
+                    ax.text(j + 0.5, self.size - 0.5 - i, str(board[i][j]), 
+                            ha='center', va='center', fontsize=16, color=fontcolor)
+        
+        # set the axis properties
+        ax.set_xlim(0, self.size)
+        ax.set_ylim(0, self.size)
+        ax.set_aspect('equal')
+        ax.axis('off')
+
+        # add title
+        ax.set_title(title, fontsize=20, pad=20)
+
+        if save_path is not '':
+            plt.savefig(save_path, bbox_inches='tight')
+        
+        plt.show()
 
 
 class _SudokuSolver:
@@ -403,6 +460,8 @@ if __name__ == '__main__':
             [0,3,0,0,0,0,2,0,0]
         ])
     test_sudoku.show()
+    test_sudoku.show_as_image()
 
     test_sudoku.solve()
     test_sudoku.show_solution()
+    test_sudoku.show_solution_as_image()

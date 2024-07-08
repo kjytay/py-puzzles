@@ -60,6 +60,13 @@ test_sudoku.show_solution()
 # +-------+-------+-------+
 ```
 
+The `show_as_image()` and `show_as_solution()` methods produce images of the original and solution board respectively. The `title` argument for these methods allow you to change the title of the image, and the `save_path` argument lets you save the image to disk.
+```
+test_sudoku.show_as_image()
+test_sudoku.show_solution_as_image()
+test_sudoku.show_solution_as_image(title='Sudoku solution', save_path='test_sudoku_solution.png')
+```
+
 If `board` is not passed to the `Sudoku` constructor, the board defaults to the empty board. You can generate a random board with approximately `blank_proportion` cells empty (default 0.5) by calling `generate_puzzle_board()`.
 ```
 import random
