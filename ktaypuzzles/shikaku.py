@@ -28,6 +28,37 @@ class Shikaku:
                     row[j] = EMPTY
         self.is_solved = False
         self.solution = None
+    
+    @staticmethod
+    def get_board_ascii(board: Board) -> str:
+        rows = len(board)
+        cols = len(board[0])
+        maxval = max([max([x for x in row if x is not None]) for row in board])
+        table = ''
+        cell_length = len(str(maxval))
+        format_int = '{0:0' + str(cell_length) + 'd}'
+        for i, row in enumerate(board):
+            if i == 0:
+                table += ('+-' + '-' * (cell_length + 1) *
+                          cols) + '+' + '\n'
+            table += (('| ' + '{} ' * cols) + '|').format(*[format_int.format(
+                x) if x != EMPTY else ' ' * cell_length for x in row]) + '\n'
+            if i == len(board) - 1:
+                table += ('+-' + '-' * (cell_length + 1) *
+                          cols) + '+' + '\n'
+        return table
+    
+    def __str__(self) -> str:
+        """
+        Prints the original board.
+        """
+        return '''
+--------------------
+{}x{} SHIKAKU PUZZLE
+--------------------
+{}
+        '''.format(self.rows, self.cols,
+                   Shikaku.get_board_ascii(self.board))
 
 
 if __name__ == '__main__':
@@ -44,3 +75,20 @@ if __name__ == '__main__':
         [0, 6, 0, 0, 0, 2, 0, 0, 0, 3],
         [2, 0, 0, 0, 5, 0, 0, 0, 3, 0],
     ])
+    print(test_shikaku)
+
+    test_shikaku2 = Shikaku([
+        [2, 0, 0, 2, 0, 0, 3, 0, 0, 2, 0, 0, 4, 0],
+        [0, 0, 3, 0, 0, 2, 0, 0, 2, 0, 0, 3, 0, 0],
+        [0, 2, 0, 0, 4, 0, 0, 5, 0, 0, 2, 0, 0, 3],
+        [3, 0, 0, 5, 0, 0, 2, 0, 0, 3, 0, 0, 4, 0],
+        [0, 0, 5, 0, 0, 2, 0, 0, 2, 0, 0, 5, 0, 0],
+        [0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 5, 0, 0, 4],
+        [3, 0, 0, 2, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0],
+        [0, 0, 2, 0, 0, 3, 0, 0, 5, 0, 0, 2, 0, 0],
+        [0, 2, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 3],
+        [3, 0, 0, 5, 0, 0, 5, 0, 0, 2, 0, 0, 3, 0],
+        [0, 0, 2, 0, 0, 3, 0, 0, 2, 0, 0, 2, 0, 0],
+        [0, 4, 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0, 3]
+    ])
+    print(test_shikaku2)
