@@ -294,7 +294,7 @@ class Sudoku:
          
         fig, ax = plt.subplots(figsize=(6, 6))
     
-        # draw main grid (horizontal, then diagonal)
+        # draw main grid (horizontal, then vertical)
         for i in range(self.size+1):
             lw = 2 if i % self.minirows == 0 else 0.5
             ax.plot([0, self.size], [i, i], color='black', linewidth=lw)
@@ -319,7 +319,7 @@ class Sudoku:
         # add title
         ax.set_title(title, fontsize=20, pad=20)
 
-        if save_path is not '':
+        if save_path != '':
             plt.savefig(save_path, bbox_inches='tight')
         
         plt.show()
