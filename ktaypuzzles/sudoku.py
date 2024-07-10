@@ -286,7 +286,7 @@ class Sudoku:
         Draw an image of the given board. Digits in both board and original_board are in black,
         digits in just board are in red.
         """
-        if Board is None:
+        if board is None:
             print('No board provided, returning')
             return
         if original_board is None:
