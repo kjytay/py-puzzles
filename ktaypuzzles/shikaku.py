@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from typing import Iterable, List, Union
 
 """
@@ -13,6 +14,8 @@ class Shikaku:
     def __init__(self, board: Iterable[Iterable[Union[int, None]]]):
         """
         Initializes a Shikaku board.
+        An anchor refers to the cell which is given in the puzzle. Its value
+        indicates the area of the rectangle that the cell belongs to.
         """
         self.rows = len(board)
         self.cols = len(board[0])
@@ -22,10 +25,14 @@ class Shikaku:
             [cell for cell in row] for row in board
         ]
         # replace anything other than valid integers with an empty cell
-        for row in self.board:
-            for j in range(len(row)):
-                if isinstance(row[j], int) is False or row[j] < 1:
-                    row[j] = EMPTY
+        # populate anchor list at the same time.
+        self.anchors = []
+        for r in range(self.rows):
+            for c in range(self.cols):
+                if isinstance(self.board[r][c], int) is False or self.board[r][c] < 1:
+                    self.board[r][c] = EMPTY
+                else:
+                    self.anchors.append((r, c, board[r][c]))
         self.is_solved = False
         self.solution = None
     
@@ -59,6 +66,47 @@ class Shikaku:
 {}
         '''.format(self.rows, self.cols,
                    Shikaku.get_board_ascii(self.board))
+    
+    def show(self):
+        print(Shikaku.get_board_ascii(self.board))
+    
+    def show_as_image(self, title: str = 'Shikaku', save_path: str = '') -> None:
+        """
+        Draw image of the original board.
+        """
+        self._get_board_image(title=title, save_path=save_path)
+    
+    def _get_board_image(self, title: str = '', save_path: str = '') -> None:
+        """
+        Draw an image of the given board.
+        TODO: In the future, this will be extended to allow solutions to be drawn.
+        """
+        fig, ax = plt.subplots(figsize=(6, 6))
+
+        # draw main grid
+        for i in range(self.rows+1):
+            ax.plot([0, self.cols], [i, i], color='black', linewidth=0.5)
+        for i in range(self.cols+1):
+            ax.plot([i, i], [0, self.rows], color='black', linewidth=0.5)
+
+        # add numbers
+        for (r, c, val) in self.anchors:
+            ax.text(c + 0.5, self.rows - 0.5 - r, str(val),
+                    ha='center', va='center', fontsize=14, color='black')
+        
+        # set the axis properties
+        ax.set_xlim(-1, self.cols+1)
+        ax.set_ylim(-1, self.rows+1)
+        ax.set_aspect('equal')
+        ax.axis('off')
+
+        # add title
+        ax.set_title(title, fontsize=20, pad=20)
+
+        if save_path != '':
+            plt.savefig(save_path, bbox_inches='tight')
+        
+        plt.show()
 
 
 if __name__ == '__main__':
@@ -92,3 +140,4 @@ if __name__ == '__main__':
         [0, 4, 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0, 3]
     ])
     print(test_shikaku2)
+    test_shikaku2.show_as_image()
