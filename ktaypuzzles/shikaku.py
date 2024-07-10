@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
-from typing import Iterable, List, Union
+from typing import Dict, Iterable, List, Optional, Union, Tuple
+from .rect import Rect
 
 """
 Each Shikaku board is represented a `Board` object, where board[r][c] is either
@@ -36,6 +37,12 @@ class Shikaku:
         self.is_solved = False
         self.solution = None
     
+    def solve(self):
+        """
+        Solve the shikaku board. Solution is saved as self.solution, and also returned.
+        """
+        raise NotImplementedError
+    
     @staticmethod
     def get_board_ascii(board: Board) -> str:
         rows = len(board)
@@ -70,16 +77,28 @@ class Shikaku:
     def show(self):
         print(Shikaku.get_board_ascii(self.board))
     
+    def show_solution(self):
+        if self.solution is not None:
+            print('not implemented yet') # TODO
+        return
+
     def show_as_image(self, title: str = 'Shikaku', save_path: str = '') -> None:
         """
         Draw image of the original board.
         """
         self._get_board_image(title=title, save_path=save_path)
     
-    def _get_board_image(self, title: str = '', save_path: str = '') -> None:
+    def show_solution_as_image(self, title: str = 'Shikaku', save_path: str = '') -> None:
+        """
+        Draw image of the board with solution overlaid on top.
+        """
+        self._get_board_image(self.solution, title=title, save_path=save_path)
+
+    def _get_board_image(self, solution: Optional[Dict[int, Rect]] = None, title: str = '',
+                         save_path: str = '') -> None:
         """
         Draw an image of the given board.
-        TODO: In the future, this will be extended to allow solutions to be drawn.
+        If solution is provided, draw the rectangles of the solution too.
         """
         fig, ax = plt.subplots(figsize=(6, 6))
 
@@ -92,7 +111,19 @@ class Shikaku:
         # add numbers
         for (r, c, val) in self.anchors:
             ax.text(c + 0.5, self.rows - 0.5 - r, str(val),
-                    ha='center', va='center', fontsize=14, color='black')
+                    ha='center', va='center', fontsize=12, color='black')
+            
+        # if solution is provided, draw the rectangles
+        if solution is not None:
+            for rect in solution.values():
+                ax.plot([rect.c1, rect.c1], [self.rows-rect.r1, self.rows-rect.r2-1],
+                        color='black', linewidth=3)
+                ax.plot([rect.c2+1, rect.c2+1], [self.rows-rect.r1, self.rows-rect.r2-1],
+                        color='black', linewidth=3)
+                ax.plot([rect.c1, rect.c2+1], [self.rows-rect.r1, self.rows-rect.r1],
+                        color='black', linewidth=3)
+                ax.plot([rect.c1, rect.c2+1], [self.rows-rect.r2-1, self.rows-rect.r2-1],
+                        color='black', linewidth=3)
         
         # set the axis properties
         ax.set_xlim(-1, self.cols+1)
@@ -108,6 +139,18 @@ class Shikaku:
         
         plt.show()
 
+
+class _ShikakuSolver:
+    def __init__(self, shikaku: Shikaku):
+        self.rows = shikaku.rows
+        self.cols = shikaku.cols
+        self.board = shikaku.board
+        self.anchors = shikaku.anchors
+        self.num_anchors = len(self.anchors)
+    
+    def backtracking_solve(self) -> Optional[Dict[int, Rect]]:
+        raise NotImplementedError
+    
 
 if __name__ == '__main__':
 
@@ -141,3 +184,4 @@ if __name__ == '__main__':
     ])
     print(test_shikaku2)
     test_shikaku2.show_as_image()
+    test_shikaku2.show_solution_as_image()
