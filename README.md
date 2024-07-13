@@ -4,6 +4,10 @@ This is my collection of code for generating and solving puzzles. It contains bo
 
 Here is a list of repos that I have drawn from:
 - [jeffsieu/py-sudoku](https://github.com/jeffsieu/py-sudoku)
+- [catlzy/shikaku-solver](https://github.com/catlzy/shikaku-solver)
+
+Other credits:
+- `shikaku-puzzles` folder copied from [catlzy/shikaku-solver](https://github.com/catlzy/shikaku-solver), originally from https://www.janko.at/Raetsel/Sikaku/index.htm.
 
 # Usage
 
