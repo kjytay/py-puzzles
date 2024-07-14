@@ -24,3 +24,13 @@ class Rect:
             return False
         
         return True
+    
+    def __str__(self):
+        return 'Rect({}, {}, {}, {})'.format(self.r1, self.r2, self.c1, self.c2)
+    
+    def __eq__(self, other):
+        if not isinstance(other, Rect):
+            return NotImplemented
+
+        return (self.r1 == other.r1 and self.r2 == other.r2 and
+                self.c1 == other.c1 and self.c2 == other.c2)

@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
 from typing import Dict, Iterable, List, Optional, Union, Tuple
 from .rect import Rect
+from .utils import get_factors
 
 """
 Each Shikaku board is represented a `Board` object, where board[r][c] is either
 a number or None (indicating an empty cell).
 """
-# type alias for the board
+# aliases
 Board = List[List[Union[int, None]]]
+Anchor = Tuple[int, int, int, int]  # (anchor_index, r, c, board[r][c])
+State = List[Rect]  # State[i]: rectangle associated with anchor [i]
 EMPTY = None
 
 class Shikaku:
@@ -27,13 +30,15 @@ class Shikaku:
         ]
         # replace anything other than valid integers with an empty cell
         # populate anchor list at the same time.
-        self.anchors = []
+        self.anchors: List[Anchor] = []
+        anchor_index = 0
         for r in range(self.rows):
             for c in range(self.cols):
                 if isinstance(self.board[r][c], int) is False or self.board[r][c] < 1:
                     self.board[r][c] = EMPTY
                 else:
-                    self.anchors.append((r, c, board[r][c]))
+                    self.anchors.append((anchor_index, r, c, board[r][c]))
+                    anchor_index += 1
         self.is_solved = False
         self.solution = None
     
@@ -42,6 +47,39 @@ class Shikaku:
         Solve the shikaku board. Solution is saved as self.solution, and also returned.
         """
         raise NotImplementedError
+    
+    def _is_rect_in_board(self, rect: Rect) -> bool:
+        """
+        Returns True if a rect is within the bounds of the board, else False.
+        """
+        return 0 <= rect.r1 and rect.r2 < self.rows and 0 <= rect.c1 and rect.c2 < self.cols
+
+    def _get_valid_rects(self, anchor: Anchor, state: State) -> List[Rect]:
+        """
+        Given a board state, return all possible rectangles for a given anchor as a list.
+        """
+        valid_rect_list = []
+        anchor_index, r, c, area = anchor
+        factor_list = get_factors(area)
+        for num_rows in factor_list:
+            num_cols = area // num_rows
+            for row_offset in range(num_rows):
+                for col_offset in range(num_cols):
+                    r1 = r - row_offset
+                    c1 = c - col_offset
+                    rect = Rect(r1, r1 + num_rows - 1, c1, c1 + num_cols - 1)
+                    if not self._is_rect_in_board(rect):  # out of bounds
+                        continue
+                    overlaps = False
+                    for i, s in enumerate(state):
+                        if anchor_index != i and rect.does_rect_overlap(s):
+                            # overlaps with existing rectangle
+                            overlaps = True
+                            break
+                    if not overlaps:
+                        valid_rect_list.append(rect)
+        
+        return valid_rect_list
     
     @staticmethod
     def get_board_ascii(board: Board) -> str:
@@ -183,5 +221,5 @@ if __name__ == '__main__':
         [0, 4, 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0, 3]
     ])
     print(test_shikaku2)
-    test_shikaku2.show_as_image()
-    test_shikaku2.show_solution_as_image()
+    # test_shikaku2.show_as_image()
+    # test_shikaku2.show_solution_as_image()
