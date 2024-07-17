@@ -11,6 +11,9 @@ Other credits:
 
 # Usage
 
+- [Sudoku](#sudoku)
+- [Shikaku](#shikaku)
+
 ## Sudoku
 
 Initialize by passing in a board with the `board` parameter. `minirows` (`minicols`) refers to the number of rows (`cols`). `minirows` defaults to 3, `minicols` defaults to `minirows`.
@@ -135,4 +138,64 @@ sudoku.generate_puzzle_board(blank_proportion=0.5)
 # | 2     |   8 4 | 9   7 |
 # | 8   3 |   6 5 |   1   |
 # +-------+-------+-------+
+```
+
+## Shikaku
+
+[This article](https://www.puzzle-magazine.com/shikaku-strategy.php) contains instructions and strategies for playing Shikaku. Initialize the puzzle by passing in a `board` parameter:
+
+```
+from ktaypuzzles.shikaku import Shikaku
+test_shikaku = Shikaku([
+    [0, 4, 0, 0, 0, 2, 0, 0, 0, 3],
+    [3, 0, 0, 0, 5, 0, 0, 0, 3, 0],
+    [0, 0, 0, 3, 0, 0, 0, 6, 0, 0],
+    [0, 0, 3, 0, 0, 0, 5, 0, 0, 0],
+    [0, 3, 0, 0, 0, 4, 0, 0, 0, 5],
+    [2, 0, 0, 0, 7, 0, 0, 0, 3, 0],
+    [0, 0, 0, 5, 0, 0, 0, 4, 0, 0],
+    [0, 0, 5, 0, 0, 0, 4, 0, 0, 0],
+    [0, 6, 0, 0, 0, 2, 0, 0, 0, 3],
+    [2, 0, 0, 0, 5, 0, 0, 0, 3, 0],
+])
+```
+
+Print the puzzle to console with the `show()` method. The `show_as_image()` method produces an image of the puzzle.
+
+```
+test_shikaku.show()
+# +---------------------+
+# | - 4 - - - 2 - - - 3 |
+# | 3 - - - 5 - - - 3 - |
+# | - - - 3 - - - 6 - - |
+# | - - 3 - - - 5 - - - |
+# | - 3 - - - 4 - - - 5 |
+# | 2 - - - 7 - - - 3 - |
+# | - - - 5 - - - 4 - - |
+# | - - 5 - - - 4 - - - |
+# | - 6 - - - 2 - - - 3 |
+# | 2 - - - 5 - - - 3 - |
+# +---------------------+
+
+test_shikaku.show_as_image()
+```
+
+Solve the puzzle with the `solve()` method. Once this is called, the solution is saved as the `solution` attribute of the Sudoku object. (If there is no solution, `solution` is `None`.) `show_solution()` prints the solution to the console (cells with the same number belong to the same rectangle), while `show_solution_as_image()` produces an image of the solution.
+
+```
+test_shikaku.solve()
+test_shikaku.show_solution()
+# +-------------------------------+
+# | 00 00 00 00 01 01 09 02 02 02 |
+# | 03 04 04 04 04 04 09 05 05 05 |
+# | 03 06 06 06 14 11 09 07 07 12 |
+# | 03 08 08 08 14 11 09 07 07 12 |
+# | 10 10 10 16 14 11 09 07 07 12 |
+# | 13 13 18 16 14 11 15 15 15 12 |
+# | 20 20 18 16 14 17 17 17 17 12 |
+# | 20 20 18 16 14 21 19 19 25 22 |
+# | 20 20 18 16 14 21 19 19 25 22 |
+# | 23 23 18 24 24 24 24 24 25 22 |
+# +-------------------------------+
+test_shikaku.show_solution_as_image()
 ```
