@@ -7,7 +7,7 @@ setup(
     author_email='kjytay@gmail.com',
     description='My collection for generating and solving puzzles',
     packages=['ktaypuzzles'],
-    version='0.5.0',
+    version='0.5.1',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',

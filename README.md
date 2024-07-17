@@ -16,6 +16,12 @@ Other credits:
 
 ## Sudoku
 
+Note: The following variants of sudoku are also available with the same interface:  
+- [Diagonal sudoku](https://github.com/kjytay/py-puzzles/blob/main/ktaypuzzles/diagonalsudoku.py)
+- [King sudoku](https://github.com/kjytay/py-puzzles/blob/main/ktaypuzzles/kingsudoku.py)
+- [Knight sudoku](https://github.com/kjytay/py-puzzles/blob/main/ktaypuzzles/knightsudoku.py)
+- [Non-consecutive sudoku](https://github.com/kjytay/py-puzzles/blob/main/ktaypuzzles/nonconsecsudoku.py)
+
 Initialize by passing in a board with the `board` parameter. `minirows` (`minicols`) refers to the number of rows (`cols`). `minirows` defaults to 3, `minicols` defaults to `minirows`.
 
 ```
