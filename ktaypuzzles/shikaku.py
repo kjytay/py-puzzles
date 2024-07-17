@@ -95,7 +95,12 @@ class Shikaku:
     
     def show_solution(self):
         if self.solution is not None:
-            print('not implemented yet') # TODO
+            solution_board = [['-'] * self.cols for _ in range(self.rows)]
+            for i, rect in enumerate(self.solution):
+                for r in range(rect.r1, rect.r2+1):
+                    for c in range(rect.c1, rect.c2+1):
+                        solution_board[r][c] = i
+            print(Shikaku.get_board_ascii(solution_board))
         return
 
     def show_as_image(self, title: str = 'Shikaku', save_path: str = '') -> None:
@@ -269,6 +274,7 @@ if __name__ == '__main__':
         [0, 6, 0, 0, 0, 2, 0, 0, 0, 3],
         [2, 0, 0, 0, 5, 0, 0, 0, 3, 0],
     ])
-    print(test_shikaku)
+    test_shikaku.show()
     test_shikaku.solve()
+    test_shikaku.show_solution()
     test_shikaku.show_solution_as_image()
