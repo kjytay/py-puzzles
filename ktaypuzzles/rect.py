@@ -16,6 +16,9 @@ class Rect:
     def __post_init__(self):
         assert self.r1 <= self.r2, 'r1 ({}) must be <= r2 ({})'.format(self.r1, self.r2)
         assert self.c1 <= self.c2, 'c1 ({}) must be <= c2 ({})'.format(self.c1, self.c2)
+    
+    def __repr__(self):
+        return 'Rect({}, {}, {}, {})'.format(self.r1, self.r2, self.c1, self.c2)
 
     def does_rect_overlap(self, other: 'Rect'):
         # check if one rectangle is above the other
