@@ -12,7 +12,7 @@ def test_valid_board():
         [2,4,8,6,7,9,3,1,5],
         [3,1,9,5,4,2,8,7,6]
     ])
-    assert sudoku.is_valid_board
+    assert sudoku.is_valid_puzzle
 
 def test_invalid_board():
     sudoku = KnightSudoku(2, board=[
@@ -21,7 +21,7 @@ def test_invalid_board():
         [4,1,3,2],
         [2,3,1,4]
     ])
-    assert sudoku.is_valid_board is False
+    assert sudoku.is_valid_puzzle is False
 
 def test_get_knight_neighbors():
     actual_neighbors = KnightSudoku()._get_knight_neighbors(2, 0)

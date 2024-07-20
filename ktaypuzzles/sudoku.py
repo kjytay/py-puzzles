@@ -48,17 +48,17 @@ class Sudoku:
                     if not row[j] in range(1, self.size + 1):
                         row[j] = EMPTY
             if self.validate() is False:
-                self.is_valid_board = False
-                print('Given board is invalid! No solution exists.')
+                self.is_valid_puzzle = False
+                print('Given puzzle is invalid! No solution exists.')
             else:
-                self.is_valid_board = True
+                self.is_valid_puzzle = True
         else:
             # if board was not passed in set board as empty board
             self.board = Sudoku.get_empty_board(self.minirows, self.minicols)
-            self.is_valid_board = True
+            self.is_valid_puzzle = True
 
         self.blank_count = len(self._get_empty_cells(self.board))
-        self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
+        self.is_solved = True if self.blank_count == 0 and self.is_valid_puzzle else False
         self.solution = self.board if self.is_solved else None
 
     def validate(self) -> bool:
@@ -144,9 +144,9 @@ class Sudoku:
             solution_list = [board for board in solution_list if board[r][c] == complete_board[r][c]]
 
         self.board = puzzle_board
-        self.is_valid_board = True
+        self.is_valid_puzzle = True
         self.blank_count = len(self._get_empty_cells(self.board))
-        self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
+        self.is_solved = True if self.blank_count == 0 and self.is_valid_puzzle else False
         self.solution = self.board if self.is_solved else None
     
     def _generate_complete_board(self) -> Board:
@@ -331,7 +331,7 @@ class _SudokuSolver:
         self.minicols = sudoku.minicols
         self.size = sudoku.size
         self.sudoku = sudoku
-        self.is_valid_board = sudoku.is_valid_board
+        self.is_valid_puzzle = sudoku.is_valid_puzzle
         self.original_board = sudoku.board
     
     def ip_solve(self) -> Optional[Board]:
@@ -340,7 +340,7 @@ class _SudokuSolver:
         Board has numbers in range (1, self.size+1), we solve the IP with numbers in range(self.size).
         Ref: https://www.mathworks.com/help/optim/ug/sudoku-puzzles-problem-based.html
         """
-        if not self.is_valid_board:
+        if not self.is_valid_puzzle:
             return None
 
         # x[v][r][c]: 1 if value of cell (r,c) is v, 0 otherwise

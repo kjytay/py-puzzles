@@ -7,7 +7,7 @@ def test_valid_board():
         [4,1,3,2],
         [2,3,1,4]
     ])
-    assert sudoku.is_valid_board
+    assert sudoku.is_valid_puzzle
 
 def test_invalid_board():
     # Invalid board
@@ -22,7 +22,7 @@ def test_invalid_board():
         [5, 9, 7, 6, 8, 2, 1, 4, 3],
         [8, 3, 4, 5, 1, 7, 2, 6, 9]
     ])
-    assert sudoku.is_valid_board is False
+    assert sudoku.is_valid_puzzle is False
 
 def test_get_neighbors_for_cell_l2r():
     actual_neighbors = DiagonalSudoku()._get_neighbors_for_cell(2, 2)

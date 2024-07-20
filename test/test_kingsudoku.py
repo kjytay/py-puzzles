@@ -12,7 +12,7 @@ def test_valid_board():
         [8,7,2,9,3,6,5,1,4],
         [5,3,1,8,2,4,9,6,7]
     ])
-    assert sudoku.is_valid_board
+    assert sudoku.is_valid_puzzle
 
 def test_invalid_board():
     sudoku = KingSudoku(2, board=[
@@ -21,7 +21,7 @@ def test_invalid_board():
         [4,1,3,2],
         [2,3,1,4]
     ])
-    assert sudoku.is_valid_board is False
+    assert sudoku.is_valid_puzzle is False
 
 def test_get_king_neighbors():
     actual_neighbors = KingSudoku()._get_king_neighbors(2, 0)

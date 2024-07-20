@@ -38,15 +38,15 @@ INVALID_BOARD_1 = [
 
 def test_valid_board():
     sudoku = NonConsecSudoku(board=VALID_BOARD_1)
-    assert sudoku.is_valid_board
+    assert sudoku.is_valid_puzzle
 
 def test_valid_board2():
     sudoku = NonConsecSudoku(board=VALID_BOARD_2)
-    assert sudoku.is_valid_board
+    assert sudoku.is_valid_puzzle
 
 def test_invalid_board():
     sudoku = NonConsecSudoku(board=INVALID_BOARD_1)
-    assert sudoku.is_valid_board is False
+    assert sudoku.is_valid_puzzle is False
 
 def test_get_candidates_for_cell():
     sudoku = NonConsecSudoku(board=VALID_BOARD_1)

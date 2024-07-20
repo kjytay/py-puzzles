@@ -75,9 +75,9 @@ class NonConsecSudoku(Sudoku):
             solution_list = [board for board in solution_list if board[r][c] == complete_board[r][c]]
 
         self.board = puzzle_board
-        self.is_valid_board = True
+        self.is_valid_puzzle = True
         self.blank_count = len(self._get_empty_cells(self.board))
-        self.is_solved = True if self.blank_count == 0 and self.is_valid_board else False
+        self.is_solved = True if self.blank_count == 0 and self.is_valid_puzzle else False
         self.solution = self.board if self.is_solved else None
     
     @override

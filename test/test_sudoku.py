@@ -39,7 +39,7 @@ VALID_BOARD_2 = [
 def test_invalid_board():
     # Invalid board
     sudoku = Sudoku(board=INVALID_BOARD_1)
-    assert sudoku.is_valid_board is False
+    assert sudoku.is_valid_puzzle is False
 
 def test_get_empty_cells():
     actual_empty_cells = Sudoku._get_empty_cells([
