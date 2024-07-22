@@ -102,7 +102,45 @@ class PartialXVSudoku(Sudoku):
     def get_board_ascii(minirows: int = 3, minicols: Optional[int] = None, board: Board = None,
                         X_positions: List[Tuple[int]] = [],
                         V_positions: List[Tuple[int]] = []) -> str:
-        raise NotImplementedError
+        minicols = minicols if minicols else minirows
+        size = minirows * minicols
+        cell_length = len(str(size))
+        format_int = '{0:0' + str(cell_length) + 'd}'
+
+        row_str_list = []
+        for i, row in enumerate(board):
+            if i == 0:
+                row_str_list.append(('+' + '-' * (cell_length + 3) * minicols) * minirows + '+')
+            
+            row_str = (('|' + ' {}  ' * minicols) * minirows + '|').format(*[format_int.format(
+                x) if x != EMPTY else ' ' * cell_length for x in row])
+            for (r1, c1, r2, c2) in X_positions:
+                if r1 == i and r2 == i:
+                    left_c_index = min(c1, c2) + 1
+                    str_index = (cell_length + 3) * left_c_index + left_c_index // minicols
+                    row_str = row_str[:str_index] + 'x' + row_str[str_index+1:]
+            for (r1, c1, r2, c2) in V_positions:
+                if r1 == i and r2 == i:
+                    left_c_index = min(c1, c2) + 1  # small col index but with 1-indexing
+                    str_index = (cell_length + 3) * left_c_index + left_c_index // minicols
+                    row_str = row_str[:str_index] + 'v' + row_str[str_index+1:]
+            row_str_list.append(row_str)
+            
+            if i == size - 1 or i % minirows == minirows - 1:
+                row_str = ('+' + '-' * (cell_length + 3) * minicols) * minirows + '+'
+            else:
+                row_str = (('|' + ' {}  ' * minicols) * minirows + '|').format(*[' ' * cell_length for x in row])
+            for (r1, c1, r2, c2) in X_positions:
+                if (r1, r2) == (i, i+1) or (r1, r2) == (i+1, i):
+                    str_index = (cell_length + 3) * c1 + (1 + cell_length // 2) + 1 + c1 // minicols
+                    row_str = row_str[:str_index] + 'x' + row_str[str_index+1:]
+            for (r1, c1, r2, c2) in V_positions:
+                if (r1, r2) == (i, i+1) or (r1, r2) == (i+1, i):
+                    str_index = (cell_length + 3) * c1 + (1 + cell_length // 2) + 1 + c1 // minicols
+                    row_str = row_str[:str_index] + 'v' + row_str[str_index+1:]
+            row_str_list.append(row_str)
+        
+        return '\n'.join(row_str_list)
     
     @override
     def __str__(self) -> str:
@@ -209,7 +247,7 @@ if __name__ == '__main__':
 
     test_sudoku = PartialXVSudoku(
         board = [
-            [0,0,0,0,0,3,5,0,0],
+            [2,8,0,0,0,3,5,0,0],
             [0,7,0,0,0,0,0,8,1],
             [0,0,0,0,0,8,9,0,0],
             [4,0,0,0,2,0,3,0,0],
@@ -222,7 +260,5 @@ if __name__ == '__main__':
         X_positions = [(2, 3, 3, 3), (6, 3, 7, 3)],
         V_positions = [(7, 6, 7, 7)]
     )
-
-    VALID_X_POSITIONS_1 = [(2, 3, 3, 3), (6, 3, 7, 3)]
-    VALID_V_POSITIONS_1 = [(7, 6, 7, 7)]
+    test_sudoku.show()
     test_sudoku.show_as_image()
