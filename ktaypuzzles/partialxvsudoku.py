@@ -80,6 +80,57 @@ class PartialXVSudoku(Sudoku):
         return True
     
     @override
+    def solve(self) -> Optional[Board]:
+        """
+        Solve the sudoku board. Board is saved as self.solution, and also returned.
+        """
+        raise NotImplementedError
+    
+    @override
+    def generate_puzzle_board(self, blank_proportion: float = 0.5) -> Board:
+        raise NotImplementedError
+    
+    @override
+    def _get_candidates_for_cell(self, r: int, c: int, board: Board) -> Set[int]:
+        """
+        Return possible values in (r,c) given the current board. It ignores the value (if present)
+        at (r,c).
+        """
+        raise NotImplementedError
+    
+    @staticmethod
+    def get_board_ascii(minirows: int = 3, minicols: Optional[int] = None, board: Board = None,
+                        X_positions: List[Tuple[int]] = [],
+                        V_positions: List[Tuple[int]] = []) -> str:
+        raise NotImplementedError
+    
+    @override
+    def __str__(self) -> str:
+        """
+        Prints the original board.
+        """
+        return '''
+--------------------------------------
+{}x{} ({}x{}) PARTIAL XV SUDOKU PUZZLE
+--------------------------------------
+{}
+        '''.format(self.size, self.size, self.minirows, self.minicols,
+                   PartialXVSudoku.get_board_ascii(
+                       self.minirows, self.minicols, self.board, self.X_positions, self.V_positions))
+
+    @override
+    def show(self):
+        print(PartialXVSudoku.get_board_ascii(
+            self.minirows, self.minicols, self.board, self.X_positions, self.V_positions))
+    
+    @override
+    def show_solution(self):
+        if self.solution is not None:
+            print(PartialXVSudoku.get_board_ascii(
+                self.minirows, self.minicols, self.solution, self.X_positions, self.V_positions))
+        return
+    
+    @override
     def show_as_image(self, title: str = 'Partial XV Sudoku', save_path: str = '') -> None:
         self._get_board_image(self.board, title=title, save_path=save_path)
     
@@ -139,6 +190,20 @@ class PartialXVSudoku(Sudoku):
             plt.savefig(save_path, bbox_inches='tight')
         
         plt.show()
+
+
+class _PartialXVSudokuSolver(_SudokuSolver):
+    def __init__(self, sudoku: PartialXVSudoku):
+        super().__init__(sudoku)
+    
+    @override
+    def backtracking_solve(self) -> List[Board]:
+        raise NotImplementedError
+
+    @override
+    def ip_solve(self) -> Optional[Board]:
+        raise NotImplementedError
+
 
 if __name__ == '__main__':
 
